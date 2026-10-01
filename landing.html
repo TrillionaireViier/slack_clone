@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slack Clone — Game Studio Architecture, UE5 Packaging CI/CD & Video Huddles</title>
-  <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks (Perforce/GitHub), video huddle calls, and playtest feedback." />
+  <title>Slack Clone — Game Studio Architecture, UE5 CI/CD, Trello/Jira Workstation & Video Huddles</title>
+  <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks, Trello/Jira Kanban workstations, and video huddles." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,6 +26,8 @@
       --accent2: #00d4aa;
       --warning: #ff8c42;
       --danger: #ff4757;
+      --jira-blue: #0052cc;
+      --trello-blue: #0079bf;
       --gradient: linear-gradient(135deg, #7c5cff 0%, #00d4aa 100%);
       --gradient-hover: linear-gradient(135deg, #6c4cee 0%, #00b894 100%);
     }
@@ -54,7 +56,7 @@
     }
     .top-nav-center {
       flex: 1;
-      max-width: 480px;
+      max-width: 440px;
       margin: 0 16px;
       position: relative;
     }
@@ -137,6 +139,24 @@
     .btn-primary:hover {
       opacity: 0.9;
       transform: translateY(-1px);
+    }
+    .btn-jira {
+      background: rgba(0, 82, 204, 0.2);
+      border: 1px solid var(--jira-blue);
+      color: #4c9aff;
+    }
+    .btn-jira:hover {
+      background: var(--jira-blue);
+      color: #fff;
+    }
+    .btn-trello {
+      background: rgba(0, 121, 191, 0.2);
+      border: 1px solid var(--trello-blue);
+      color: #57d9a3;
+    }
+    .btn-trello:hover {
+      background: var(--trello-blue);
+      color: #fff;
     }
     .btn-video {
       background: rgba(0, 212, 170, 0.15);
@@ -432,7 +452,7 @@
       color: var(--accent2);
     }
 
-    /* Automated Build & Webhook Alert Cards */
+    /* Automated Cards */
     .build-alert-card {
       background: rgba(26, 26, 46, 0.9);
       border: 1px solid var(--border-bright);
@@ -486,6 +506,66 @@
       color: var(--text);
       font-weight: 700;
       margin-top: 2px;
+    }
+
+    /* ── Trello & Jira Workstation Kanban Styling ── */
+    .kanban-board-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+      overflow-x: auto;
+    }
+    .kanban-col {
+      background: rgba(18, 16, 34, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 220px;
+    }
+    .kanban-col-header {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .kanban-card {
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .kanban-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .kanban-tag {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .kanban-tag.jira {
+      background: rgba(0, 82, 204, 0.3);
+      color: #4c9aff;
+    }
+    .kanban-tag.trello {
+      background: rgba(0, 121, 191, 0.3);
+      color: #57d9a3;
     }
 
     /* Bug Tracker Card */
@@ -853,6 +933,7 @@
         <span class="status-dot"></span>
         <span id="userStatusText">Danila Viier (Lead Dev)</span>
       </div>
+      <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">🎯 Trello & Jira Board</button>
       <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
       <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
@@ -869,6 +950,7 @@
     <div class="workspace-rail">
       <div class="workspace-icon active" onclick="switchChannel('announcements', '📢 #announcements', 'Studio milestone announcements')" title="Unreal Engine 5 Game Studio HQ">UE5</div>
       <div class="workspace-icon" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')" title="Code & Perforce Core">P4</div>
+      <div class="workspace-icon" onclick="switchChannel('trello-jira-board', '📋 #trello-jira-board', 'Trello Kanban & Jira issue workstation board')" title="Trello & Jira Workstation Board">📋</div>
       <div class="workspace-icon" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')" title="CI/CD Build Pipeline">CI</div>
       <div style="margin-top: auto;" class="workspace-icon" onclick="openPlaytestModal()" title="Playtest Bug Feedback">+</div>
     </div>
@@ -895,6 +977,10 @@
           <div class="channel-item" id="item-code-updates" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')">
             <span>💻</span> <span>code-updates</span>
             <span class="unread-pill">4</span>
+          </div>
+          <div class="channel-item" id="item-trello-jira-board" onclick="switchChannel('trello-jira-board', '📋 #trello-jira-board', 'Interactive Trello Workstation Kanban & Jira Sprint issue tracker')">
+            <span>📋</span> <span>trello-jira-board</span>
+            <span class="unread-pill">3</span>
           </div>
           <div class="channel-item" id="item-builds-playtest" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')">
             <span>📦</span> <span>builds-playtest</span>
@@ -924,12 +1010,18 @@
           </div>
         </div>
 
-        <!-- 3. Webhooks & Integrations -->
+        <!-- 3. Webhooks & Workstation Apps -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">
-            <span>Automation Webhooks</span>
+            <span>Workstations & Apps</span>
           </div>
-          <div class="channel-item" onclick="showToast('⚡ Perforce Helix Core Swarm Webhook Connected & Active')">
+          <div class="channel-item" onclick="openWorkstationModal()">
+            <span>🎯</span> <span>Jira Software Cloud</span>
+          </div>
+          <div class="channel-item" onclick="openWorkstationModal()">
+            <span>📋</span> <span>Trello Workstation</span>
+          </div>
+          <div class="channel-item" onclick="showToast('⚡ Perforce Helix Core Swarm Webhook Connected')">
             <span>⚡</span> <span>Perforce Swarm</span>
           </div>
           <div class="channel-item" onclick="showToast('🤖 UE5 Incredibuild Packaging Bot Active (32 Worker Nodes)')">
@@ -949,7 +1041,8 @@
           <h3 id="currentChannelName">📢 #announcements</h3>
           <p id="currentChannelDesc">Studio milestone announcements and release targets</p>
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">📋 Trello/Jira Board</button>
           <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle (Video)</button>
           <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
           <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
@@ -972,6 +1065,7 @@
             <button class="tool-btn" onclick="insertFormatting('italic')"><i>I</i></button>
             <button class="tool-btn" onclick="insertFormatting('code')"><code>&lt;/&gt;</code></button>
             <div style="margin-left: auto; display: flex; gap: 4px;">
+              <button class="tool-btn" onclick="openWorkstationModal()" title="Open Trello/Jira Board">🎯 Jira</button>
               <button class="tool-btn" onclick="openPlaytestModal()" title="Slash command /bug">🐛 Bug</button>
               <button class="tool-btn" onclick="triggerComposerFilePicker()" title="Attach Unreal Log File or Screenshot">📎 Attach Log / File</button>
             </div>
@@ -1005,7 +1099,84 @@
 
   </div>
 
-  <!-- ── MODAL 1: LIVE HUDDLE / VIDEO CALL MODAL ── -->
+  <!-- ── MODAL 1: TRELLO & JIRA WORKSTATION KANBAN BOARD ── -->
+  <div class="modal-overlay" id="workstationModal">
+    <div class="modal-card" style="max-width: 860px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <div class="modal-title">📋 Trello & Jira Workstation Kanban Board</div>
+        <button class="btn btn-jira btn-sm" onclick="createNewJiraTicket()">+ New Jira Ticket</button>
+      </div>
+      <div class="modal-subtitle">Live studio sprint synchronization for Unreal Engine 5 task management.</div>
+
+      <div class="kanban-board-container" id="kanbanBoardContainer">
+        <!-- Col 1: Backlog / To Do -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span>📌 To Do / Backlog</span>
+            <span style="color: var(--accent2);">2</span>
+          </div>
+          <div class="kanban-card" onclick="showToast('Jira UE5-4921 Details Opened')">
+            <span class="kanban-tag jira">JIRA UE5-4921</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Fix C++ Locomotion physics crash on slope sprint</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b> | Priority: <b style="color: #ff6b81;">High</b></div>
+          </div>
+          <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
+            <span class="kanban-tag trello">TRELLO CARD</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Nanite rock mesh LOD streaming optimization</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@elena.rostova</b></div>
+          </div>
+        </div>
+
+        <!-- Col 2: In Progress -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span>⚡ In Progress</span>
+            <span style="color: var(--accent2);">2</span>
+          </div>
+          <div class="kanban-card" onclick="showToast('Jira UE5-4930 Details Opened')">
+            <span class="kanban-tag jira">JIRA UE5-4930</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Implement Lumen GI emissive lighting shaders</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@danila</b> | Priority: <b style="color: #ff6b81;">Blocker</b></div>
+          </div>
+          <div class="kanban-card" onclick="showToast('Jira UE5-4932 Details Opened')">
+            <span class="kanban-tag jira">JIRA UE5-4932</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Package Win64 Standalone automated build v5.4.2</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@build.bot</b></div>
+          </div>
+        </div>
+
+        <!-- Col 3: In Review / QA -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span>🔍 In Review / QA</span>
+            <span style="color: var(--accent2);">1</span>
+          </div>
+          <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
+            <span class="kanban-tag trello">TRELLO CARD</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">FMOD 3D Spatial audio ambient triggers</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@sarah.miller</b></div>
+          </div>
+        </div>
+
+        <!-- Col 4: Done / Deployed -->
+        <div class="kanban-col">
+          <div class="kanban-col-header">
+            <span>✅ Done</span>
+            <span style="color: var(--accent2);">1</span>
+          </div>
+          <div class="kanban-card" onclick="showToast('Jira UE5-4900 Details Opened')">
+            <span class="kanban-tag jira">JIRA UE5-4900</span>
+            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Unreal Engine 5.4.2 upgrade & shader precompilation</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Resolved & Verified</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 18px; width: 100%;" onclick="closeWorkstationModal()">Close Workstation Board</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: LIVE HUDDLE / VIDEO CALL MODAL ── -->
   <div class="modal-overlay" id="huddleModal">
     <div class="modal-card" style="max-width: 680px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -1015,33 +1186,19 @@
       <div class="modal-subtitle">Real-time studio video & screen share session with WebRTC audio feeds.</div>
 
       <div class="huddle-grid">
-        <!-- Tile 1: Local User / Host -->
         <div class="video-tile">
           <video id="localVideoFeed" autoplay muted playsinline style="display: none;"></video>
           <div class="video-avatar-fallback" id="localVideoAvatar">DV</div>
-          <div class="video-overlay-name">
-            <span class="status-dot"></span>
-            <span id="huddleHostName">Danila Viier (Host)</span>
-          </div>
+          <div class="video-overlay-name"><span class="status-dot"></span><span id="huddleHostName">Danila Viier (Host)</span></div>
         </div>
-
-        <!-- Tile 2: Alex Rivera -->
         <div class="video-tile">
           <div class="video-avatar-fallback" style="background: linear-gradient(135deg, #ff8c42 0%, #ff4757 100%);">AR</div>
-          <div class="video-overlay-name">
-            <span class="status-dot"></span>
-            <span>Alex Rivera (Physics Dev)</span>
-          </div>
+          <div class="video-overlay-name"><span class="status-dot"></span><span>Alex Rivera (Physics Dev)</span></div>
         </div>
-
-        <!-- Tile 3: Sarah Miller Screen Share -->
         <div class="video-tile">
           <div style="font-size: 2.2rem; margin-bottom: 6px;">🖥️</div>
           <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent2);">UE5 Editor — Level 3 Cave</div>
-          <div class="video-overlay-name">
-            <span class="status-dot"></span>
-            <span>Sarah Miller (Screen Share)</span>
-          </div>
+          <div class="video-overlay-name"><span class="status-dot"></span><span>Sarah Miller (Screen Share)</span></div>
         </div>
       </div>
 
@@ -1054,7 +1211,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 2: WORKSPACE & VIEW SETTINGS MODAL (HIDE THREAD REPLIES OPTION) ── -->
+  <!-- ── MODAL 3: WORKSPACE & VIEW SETTINGS MODAL ── -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-card">
       <div class="modal-title">⚙️ Workspace & View Settings</div>
@@ -1070,25 +1227,17 @@
 
       <div class="switch-row">
         <div>
-          <div class="switch-label">Hide Resolved Playtest Bugs</div>
-          <div class="switch-desc">Automatically filter out closed bug reports in #bugs.</div>
+          <div class="switch-label">Sync Jira & Trello Notifications</div>
+          <div class="switch-desc">Automatically post updated Kanban tickets to #trello-jira-board.</div>
         </div>
-        <input type="checkbox" id="toggleHideBugs" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
-      </div>
-
-      <div class="switch-row">
-        <div>
-          <div class="switch-label">CI/CD Build Packaging Audio Alerts</div>
-          <div class="switch-desc">Play chime notification when UE5 Standalone Win64 build completes.</div>
-        </div>
-        <input type="checkbox" id="toggleAudioBuilds" checked style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
+        <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
       </div>
 
       <button class="btn btn-primary" style="margin-top: 20px; width: 100%; justify-content: center;" onclick="closeSettingsModal()">Save & Apply Settings ⚙️</button>
     </div>
   </div>
 
-  <!-- ── MODAL 3: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
+  <!-- ── MODAL 4: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
   <div class="modal-overlay" id="userAuthModal">
     <div class="modal-card">
       <div class="modal-title">🔑 User Account Authentication</div>
@@ -1099,7 +1248,6 @@
         <button class="modal-tab-btn" id="tabSignUp" onclick="switchAuthTab('signUp')">Create Account (Sign Up)</button>
       </div>
 
-      <!-- Sign In Form -->
       <div id="authFormSignIn">
         <div class="form-group">
           <label class="form-label">Email Address</label>
@@ -1112,7 +1260,6 @@
         <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
       </div>
 
-      <!-- Sign Up Form -->
       <div id="authFormSignUp" style="display: none;">
         <div class="form-group">
           <label class="form-label">Full Name</label>
@@ -1137,23 +1284,23 @@
     </div>
   </div>
 
-  <!-- ── MODAL 4: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
+  <!-- ── MODAL 5: SEPARATE DEDICATED ADMIN PANEL MODAL (LOCKED BY DEFAULT) ── -->
   <div class="modal-overlay" id="adminModal">
     <div class="modal-card">
       <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
-      <div class="modal-subtitle">Hardened admin management panel for infrastructure & telemetry.</div>
+      <div class="modal-subtitle">Hardened admin management panel. Password entry required to unlock.</div>
 
-      <!-- Step 1: Admin Password -->
+      <!-- Step 1: Admin Password (EMPTY DEFAULT, REQUIRES PASSWORD FIRST) -->
       <div id="adminStep1">
         <div class="form-group">
           <label class="form-label">Superuser Email</label>
           <input type="email" class="form-input" id="adminEmail" value="admin@parserforall.app" />
         </div>
         <div class="form-group">
-          <label class="form-label">Hardened Superuser Password</label>
-          <input type="password" class="form-input" id="adminPassword" value="P4A-Admin#2026!SecuredSuperUser" />
+          <label class="form-label">Superuser Password Required</label>
+          <input type="password" class="form-input" id="adminPassword" placeholder="Enter Superuser Password..." />
         </div>
-        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="proceedAdmin2FA()">Verify Superuser & Proceed to 2FA PIN →</button>
+        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="proceedAdmin2FA()">Unlock Admin Panel →</button>
       </div>
 
       <!-- Step 2: 2FA Verification -->
@@ -1189,7 +1336,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 5: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
+  <!-- ── MODAL 6: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
   <div class="modal-overlay" id="playtestModal">
     <div class="modal-card">
       <div class="modal-title">🐛 Playtest Bug Report Submission</div>
@@ -1258,6 +1405,7 @@
       channels: {
         'announcements': { name: '📢 #announcements', desc: 'Studio milestone announcements and release targets' },
         'code-updates': { name: '💻 #code-updates', desc: 'Perforce submit alerts & GitHub C++ pull requests' },
+        'trello-jira-board': { name: '📋 #trello-jira-board', desc: 'Interactive Trello Workstation Kanban & Jira Sprint issue tracker' },
         'builds-playtest': { name: '📦 #builds-playtest', desc: 'Automated UE5 Packaging CI/CD Windows standalone builds' },
         'art-assets': { name: '🎨 #art-assets', desc: 'Nanite 3D meshes, Lumen lighting & sound assets' },
         'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' },
@@ -1275,6 +1423,26 @@
             text: '🎮 **UNREAL ENGINE 5.4.2 MILESTONE REACHED!** All core locomotion, Lumen GI lighting, and packaging pipelines are validated.',
             reactions: { '🚀': 14, '🔥': 19, '🙌': 8 },
             repliesCount: 2
+          }
+        ],
+        'trello-jira-board': [
+          {
+            id: 'm_jira1',
+            author: 'Jira Software Integration Bot',
+            badge: 'JIRA CLOUD 🎯',
+            time: '10:00 AM',
+            text: '🎯 **JIRA TICKET CREATED [UE5-4921]**: Fix C++ Locomotion physics crash on slope sprint',
+            reactions: { '📋': 8, '👍': 5 },
+            repliesCount: 1
+          },
+          {
+            id: 'm_trello1',
+            author: 'Trello Workstation Bot',
+            badge: 'TRELLO BOARD 📋',
+            time: '10:45 AM',
+            text: '📋 **TRELLO CARD MOVED TO IN PROGRESS**: Lumen GI emissive lighting shaders by `@danila`',
+            reactions: { '⚡': 9 },
+            repliesCount: 0
           }
         ],
         'code-updates': [
@@ -1580,7 +1748,6 @@
       if (activeEl) activeEl.classList.add('active');
 
       renderMessages();
-      // NO TOAST ON CHANNEL SWITCH (Deleted per user request)
     }
 
     function sendMessage() {
@@ -1628,6 +1795,29 @@
         state.selectedBugFile = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
         document.getElementById('bugFileSelectedName').innerText = `Selected File: ${state.selectedBugFile}`;
         showToast('Selected file: ' + file.name);
+      }
+    }
+
+    // Trello & Jira Workstation Functions
+    function openWorkstationModal() { document.getElementById('workstationModal').classList.add('active'); }
+    function closeWorkstationModal() { document.getElementById('workstationModal').classList.remove('active'); }
+    function createNewJiraTicket() {
+      const title = prompt('Enter new Jira Ticket Summary:', 'C++ LOD Mesh LOD Streaming Optimization');
+      if (title) {
+        const ticketId = 'UE5-' + Math.floor(4000 + Math.random() * 900);
+        showToast(`🎯 Created Jira Ticket ${ticketId}: ${title}`);
+        const jiraMsg = {
+          id: 'jira_' + Date.now(),
+          author: 'Jira Software Bot',
+          badge: 'JIRA CLOUD 🎯',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: `🎯 **NEW JIRA SPRINT TICKET [${ticketId}]**: ${title}`,
+          reactions: { '📋': 2 },
+          repliesCount: 0
+        };
+        if (!state.messages['trello-jira-board']) state.messages['trello-jira-board'] = [];
+        state.messages['trello-jira-board'].unshift(jiraMsg);
+        if (state.currentChannelId === 'trello-jira-board') renderMessages();
       }
     }
 
@@ -1808,16 +1998,25 @@
       showToast(`🎉 Account created! Signed in as ${name}.`);
     }
 
-    // Admin Modal
-    function openAdminModal() { document.getElementById('adminModal').classList.add('active'); }
+    // Admin Modal (REQUIRE PASSWORD FIRST BEFORE UNLOCKING)
+    function openAdminModal() {
+      // Reset fields to ensure password is required first
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminPinInput').value = '';
+      document.getElementById('adminStep1').style.display = 'block';
+      document.getElementById('adminStep2').style.display = 'none';
+      document.getElementById('adminProfileStep').style.display = 'none';
+      document.getElementById('adminModal').classList.add('active');
+    }
     function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
     function proceedAdmin2FA() {
       const pass = document.getElementById('adminPassword').value.trim();
       if (pass === 'P4A-Admin#2026!SecuredSuperUser') {
         document.getElementById('adminStep1').style.display = 'none';
         document.getElementById('adminStep2').style.display = 'block';
+        showToast('🔑 Password verified. Enter 2FA security code.');
       } else {
-        showToast('❌ Invalid superuser password.');
+        showToast('❌ Incorrect password. Access denied.');
       }
     }
     function verifyAdmin2FA() {
@@ -1825,9 +2024,9 @@
       if (pin === '994-827') {
         document.getElementById('adminStep2').style.display = 'none';
         document.getElementById('adminProfileStep').style.display = 'block';
-        showToast('🔓 2FA Verification Success! Admin Dashboard Active.');
+        showToast('🔓 2FA Verification Success! Admin Dashboard Unlocked.');
       } else {
-        showToast('❌ Invalid 2FA PIN. Use 994-827');
+        showToast('❌ Invalid 2FA PIN. Enter 994-827');
       }
     }
     function saveAdminBio() {
