@@ -1179,25 +1179,30 @@
 
       <div class="huddle-grid">
         <div class="video-tile">
-          <video id="localVideoFeed" autoplay muted playsinline style="display: none;"></video>
+          <video id="localVideoFeed" autoplay muted playsinline style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></video>
           <div class="video-avatar-fallback" id="localVideoAvatar">DV</div>
-          <div class="video-overlay-name"><span class="status-dot"></span><span id="huddleHostName">Danila Viier (Host)</span></div>
+          <div class="video-overlay-name"><span class="status-dot online"></span><span id="huddleHostName">Danila Viier (Host)</span></div>
         </div>
         <div class="video-tile">
           <div class="video-avatar-fallback" style="background: linear-gradient(135deg, #ff8c42 0%, #ff4757 100%);">AR</div>
-          <div class="video-overlay-name"><span class="status-dot"></span><span>Alex Rivera (Physics Dev)</span></div>
+          <div class="video-overlay-name"><span class="status-dot online"></span><span>Alex Rivera (Physics Dev)</span></div>
         </div>
-        <div class="video-tile">
-          <div style="font-size: 2.2rem; margin-bottom: 6px;">🖥️</div>
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent2);">UE5 Editor — Level 3 Cave</div>
-          <div class="video-overlay-name"><span class="status-dot"></span><span>Alex Rivera (Screen Share)</span></div>
+        <div class="video-tile" id="screenShareTile" style="position: relative; overflow: hidden; background: #070a12; border: 1px solid var(--slack-border);">
+          <video id="screenShareVideoFeed" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; inset: 0;"></video>
+          <canvas id="dx12CanvasStream" style="width: 100%; height: 100%; display: none; position: absolute; inset: 0;"></canvas>
+          <div id="screenShareFallbackInfo" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 12px; z-index: 1;">
+            <div style="font-size: 2.2rem; margin-bottom: 6px;">🖥️</div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--slack-brand);">Unreal Engine 5 Editor</div>
+            <div style="font-size: 0.75rem; color: var(--slack-text-muted); margin-top: 4px;">DX12 Render Stream</div>
+          </div>
+          <div class="video-overlay-name" style="z-index: 2;"><span class="status-dot online"></span><span id="screenShareStatusLabel">Screen Share: Inactive</span></div>
         </div>
       </div>
 
-      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; background: var(--surface2); padding: 10px; border-radius: 12px; border: 1px solid var(--border);">
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; background: var(--slack-subtle-bg); padding: 10px; border-radius: 12px; border: 1px solid var(--slack-border);">
         <button class="btn btn-sm" id="micToggleBtn" onclick="toggleHuddleMic()">🎤 Mic On</button>
         <button class="btn btn-sm" id="camToggleBtn" onclick="toggleHuddleCam()">📹 Cam On</button>
-        <button class="btn btn-sm" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+        <button class="btn btn-primary btn-sm" id="screenShareBtn" onclick="toggleScreenShare()">🖥️ Share Screen</button>
         <button class="btn btn-danger btn-sm" onclick="endVideoHuddle()">🔴 End Call</button>
       </div>
     </div>
@@ -1389,7 +1394,10 @@
         active: false,
         micOn: true,
         camOn: false,
-        mediaStream: null
+        mediaStream: null,
+        screenSharing: false,
+        screenStream: null,
+        dx12AnimId: null
       },
       currentChannelId: 'announcements',
       selectedComposerAttachment: null,
@@ -1840,7 +1848,17 @@
     function endVideoHuddle() {
       if (state.huddleState.mediaStream) {
         state.huddleState.mediaStream.getTracks().forEach(track => track.stop());
+        state.huddleState.mediaStream = null;
       }
+      if (state.huddleState.screenStream) {
+        state.huddleState.screenStream.getTracks().forEach(track => track.stop());
+        state.huddleState.screenStream = null;
+      }
+      if (state.huddleState.dx12AnimId) {
+        cancelAnimationFrame(state.huddleState.dx12AnimId);
+        state.huddleState.dx12AnimId = null;
+      }
+      state.huddleState.screenSharing = false;
       document.getElementById('huddleModal').classList.remove('active');
       state.huddleState.active = false;
       showToast('🔴 Left Video Huddle Call');
@@ -1861,8 +1879,134 @@
       showToast(state.huddleState.camOn ? 'Camera Turned On' : 'Camera Turned Off');
     }
 
-    function toggleScreenShare() {
-      showToast('🖥️ Screen Share active: Unreal Engine 5 Editor (DX12 Render Stream)');
+    async function toggleScreenShare() {
+      const videoElem = document.getElementById('screenShareVideoFeed');
+      const canvasElem = document.getElementById('dx12CanvasStream');
+      const fallbackInfo = document.getElementById('screenShareFallbackInfo');
+      const statusLabel = document.getElementById('screenShareStatusLabel');
+      const btn = document.getElementById('screenShareBtn');
+
+      if (state.huddleState.screenSharing) {
+        if (state.huddleState.screenStream) {
+          state.huddleState.screenStream.getTracks().forEach(track => track.stop());
+          state.huddleState.screenStream = null;
+        }
+        if (state.huddleState.dx12AnimId) {
+          cancelAnimationFrame(state.huddleState.dx12AnimId);
+          state.huddleState.dx12AnimId = null;
+        }
+        videoElem.style.display = 'none';
+        canvasElem.style.display = 'none';
+        fallbackInfo.style.display = 'flex';
+        statusLabel.innerText = 'Screen Share: Inactive';
+        if (btn) btn.innerText = '🖥️ Share Screen';
+        state.huddleState.screenSharing = false;
+        showToast('⏹️ Screen sharing stopped.');
+        return;
+      }
+
+      // Try browser WebRTC Screen Capture first
+      if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+          state.huddleState.screenStream = stream;
+          videoElem.srcObject = stream;
+          videoElem.style.display = 'block';
+          canvasElem.style.display = 'none';
+          fallbackInfo.style.display = 'none';
+          statusLabel.innerText = '🖥️ Live WebRTC Screen Share (Active)';
+          if (btn) btn.innerText = '⏹️ Stop Sharing';
+          state.huddleState.screenSharing = true;
+
+          stream.getVideoTracks()[0].onended = () => {
+            toggleScreenShare();
+          };
+          showToast('🖥️ Realtime WebRTC Screen Share Active!');
+          return;
+        } catch (err) {
+          console.warn('WebRTC getDisplayMedia fallback to DX12 Canvas:', err);
+        }
+      }
+
+      // Fallback: DX12 60FPS Render Stream Canvas
+      startDX12CanvasStream();
+      videoElem.style.display = 'none';
+      canvasElem.style.display = 'block';
+      fallbackInfo.style.display = 'none';
+      statusLabel.innerText = '⚡ UE5 DX12 Render Stream (60 FPS)';
+      if (btn) btn.innerText = '⏹️ Stop Sharing';
+      state.huddleState.screenSharing = true;
+      showToast('⚡ Unreal Engine 5 DX12 Render Stream Active (60 FPS)');
+    }
+
+    function startDX12CanvasStream() {
+      const canvas = document.getElementById('dx12CanvasStream');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 400;
+      canvas.height = 250;
+      let angle = 0;
+
+      function renderFrame() {
+        ctx.fillStyle = '#070a12';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Render Grid
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 25) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 25) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+
+        // 3D Wireframe Mesh
+        angle += 0.035;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2 + 10;
+
+        const vertices = [
+          {x: -1, y: -1, z: -1}, {x: 1, y: -1, z: -1}, {x: 1, y: 1, z: -1}, {x: -1, y: 1, z: -1},
+          {x: -1, y: -1, z: 1},  {x: 1, y: -1, z: 1},  {x: 1, y: 1, z: 1},  {x: -1, y: 1, z: 1}
+        ];
+
+        const projected = vertices.map(v => {
+          let x = v.x * Math.cos(angle) - v.z * Math.sin(angle);
+          let z = v.x * Math.sin(angle) + v.z * Math.cos(angle);
+          let y = v.y * Math.cos(angle * 0.7) - z * Math.sin(angle * 0.7);
+          let pz = z * Math.cos(angle * 0.7) + v.y * Math.sin(angle * 0.7);
+          const scale = 160 / (pz + 3.2);
+          return { x: cx + x * scale, y: cy + y * scale };
+        });
+
+        const edges = [
+          [0,1],[1,2],[2,3],[3,0],
+          [4,5],[5,6],[6,7],[7,4],
+          [0,4],[1,5],[2,6],[3,7]
+        ];
+
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        edges.forEach(e => {
+          ctx.beginPath();
+          ctx.moveTo(projected[e[0]].x, projected[e[0]].y);
+          ctx.lineTo(projected[e[1]].x, projected[e[1]].y);
+          ctx.stroke();
+        });
+
+        // DX12 Stats HUD Overlay
+        ctx.fillStyle = '#10b981';
+        ctx.font = '11px monospace';
+        ctx.fillText(`UNREAL ENGINE 5.4.2 [DX12 AGILITY STREAM]`, 12, 22);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(`FPS: 60.0 | GPU Time: 16.6ms | VRAM: 8.2/12 GB`, 12, 38);
+        ctx.fillText(`Viewport: Level_Cave_P4 | Lumen GI & Nanite Mesh`, 12, 54);
+
+        state.huddleState.dx12AnimId = requestAnimationFrame(renderFrame);
+      }
+
+      renderFrame();
     }
 
     function toggleReaction(msgId, emoji) {
