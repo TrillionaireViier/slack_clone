@@ -1103,10 +1103,10 @@
 
   <!-- ── MODAL 1: TRELLO & JIRA WORKSTATION KANBAN BOARD ── -->
   <div class="modal-overlay" id="workstationModal">
-    <div class="modal-card" style="max-width: 860px;">
+    <div class="modal-card" style="max-width: 880px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <div class="modal-title">📋 Trello & Jira Workstation Kanban Board</div>
-        <button class="btn btn-jira btn-sm" onclick="createNewJiraTicket()">+ New Jira Ticket</button>
+        <button class="btn btn-jira btn-sm" onclick="openCreateJiraTicketModal()">+ New Jira Ticket</button>
       </div>
       <div class="modal-subtitle">Live studio sprint synchronization for Unreal Engine 5 task management.</div>
 
@@ -1115,17 +1115,19 @@
         <div class="kanban-col">
           <div class="kanban-col-header">
             <span>📌 To Do / Backlog</span>
-            <span style="color: var(--accent2);">2</span>
+            <span style="color: var(--accent2);" id="todoCount">2</span>
           </div>
-          <div class="kanban-card" onclick="showToast('Jira UE5-4921 Details Opened')">
-            <span class="kanban-tag jira">JIRA UE5-4921</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Fix C++ Locomotion physics crash on slope sprint</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b> | Priority: <b style="color: #ff6b81;">High</b></div>
-          </div>
-          <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
-            <span class="kanban-tag trello">TRELLO CARD</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Nanite rock mesh LOD streaming optimization</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@elena.rostova</b></div>
+          <div class="kanban-card-list" id="todoCardList" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="kanban-card" onclick="showToast('Jira UE5-4921 Details Opened')">
+              <span class="kanban-tag jira">JIRA UE5-4921</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Fix C++ Locomotion physics crash on slope sprint</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b> | Priority: <b style="color: #ff6b81;">High</b></div>
+            </div>
+            <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
+              <span class="kanban-tag trello">TRELLO CARD</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Nanite rock mesh LOD streaming optimization</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@elena.rostova</b></div>
+            </div>
           </div>
         </div>
 
@@ -1133,17 +1135,19 @@
         <div class="kanban-col">
           <div class="kanban-col-header">
             <span>⚡ In Progress</span>
-            <span style="color: var(--accent2);">2</span>
+            <span style="color: var(--accent2);" id="inProgressCount">2</span>
           </div>
-          <div class="kanban-card" onclick="showToast('Jira UE5-4930 Details Opened')">
-            <span class="kanban-tag jira">JIRA UE5-4930</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Implement Lumen GI emissive lighting shaders</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@danila</b> | Priority: <b style="color: #ff6b81;">Blocker</b></div>
-          </div>
-          <div class="kanban-card" onclick="showToast('Jira UE5-4932 Details Opened')">
-            <span class="kanban-tag jira">JIRA UE5-4932</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Package Win64 Standalone automated build v5.4.2</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@build.bot</b></div>
+          <div class="kanban-card-list" id="inProgressCardList" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="kanban-card" onclick="showToast('Jira UE5-4930 Details Opened')">
+              <span class="kanban-tag jira">JIRA UE5-4930</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Implement Lumen GI emissive lighting shaders</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@danila</b> | Priority: <b style="color: #ff6b81;">Blocker</b></div>
+            </div>
+            <div class="kanban-card" onclick="showToast('Jira UE5-4932 Details Opened')">
+              <span class="kanban-tag jira">JIRA UE5-4932</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Package Win64 Standalone automated build v5.4.2</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@build.bot</b></div>
+            </div>
           </div>
         </div>
 
@@ -1151,12 +1155,14 @@
         <div class="kanban-col">
           <div class="kanban-col-header">
             <span>🔍 In Review / QA</span>
-            <span style="color: var(--accent2);">1</span>
+            <span style="color: var(--accent2);" id="reviewCount">1</span>
           </div>
-          <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
-            <span class="kanban-tag trello">TRELLO CARD</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">FMOD 3D Spatial audio ambient triggers</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b></div>
+          <div class="kanban-card-list" id="reviewCardList" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
+              <span class="kanban-tag trello">TRELLO CARD</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">FMOD 3D Spatial audio ambient triggers</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b></div>
+            </div>
           </div>
         </div>
 
@@ -1164,17 +1170,88 @@
         <div class="kanban-col">
           <div class="kanban-col-header">
             <span>✅ Done</span>
-            <span style="color: var(--accent2);">1</span>
+            <span style="color: var(--accent2);" id="doneCount">1</span>
           </div>
-          <div class="kanban-card" onclick="showToast('Jira UE5-4900 Details Opened')">
-            <span class="kanban-tag jira">JIRA UE5-4900</span>
-            <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Unreal Engine 5.4.2 upgrade & shader precompilation</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Resolved & Verified</div>
+          <div class="kanban-card-list" id="doneCardList" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="kanban-card" onclick="showToast('Jira UE5-4900 Details Opened')">
+              <span class="kanban-tag jira">JIRA UE5-4900</span>
+              <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Unreal Engine 5.4.2 upgrade & shader precompilation</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Resolved & Verified</div>
+            </div>
           </div>
         </div>
       </div>
 
       <button class="btn btn-sm" style="margin-top: 18px; width: 100%;" onclick="closeWorkstationModal()">Close Workstation Board</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 5: NEW JIRA TICKET CREATION MODAL (Replaces Raw Browser Prompt) ── -->
+  <div class="modal-overlay" id="createJiraTicketModal">
+    <div class="modal-card" style="max-width: 520px; background: rgba(22, 19, 39, 0.96); backdrop-filter: blur(16px); border: 1px solid var(--jira-blue); box-shadow: 0 12px 40px rgba(0, 82, 204, 0.4);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <div class="modal-title" style="color: #4c9aff; display: flex; align-items: center; gap: 8px;">
+          <span style="background: var(--jira-blue); color: #fff; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">🎯</span>
+          Create New Jira / Trello Ticket
+        </div>
+        <span class="kanban-tag jira" style="font-size: 0.75rem;">JIRA SPRINT BOARD</span>
+      </div>
+      <div class="modal-subtitle">Configure sprint issue details to sync across UE5 Workstation & Channel stream.</div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 16px;">
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 700; color: #4c9aff;">Ticket Summary / Title *</label>
+          <input type="text" class="form-input" id="jiraTicketTitleInput" value="C++ Mesh LOD Streaming & Nanite Shading Optimization" placeholder="e.g. Fix locomotion physics crash on slope..." style="border-color: rgba(0, 82, 204, 0.5); background: rgba(0, 82, 204, 0.08); font-size: 0.9rem;" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Priority Level</label>
+            <select class="form-input" id="jiraTicketPriorityInput" style="background: var(--surface2); color: var(--text);">
+              <option value="Blocker 🔴">Blocker 🔴 (Urgent)</option>
+              <option value="High 🟧" selected>High 🟧</option>
+              <option value="Medium 🟨">Medium 🟨</option>
+              <option value="Low 🟦">Low 🟦</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assignee Engineer</label>
+            <select class="form-input" id="jiraTicketAssigneeInput" style="background: var(--surface2); color: var(--text);">
+              <option value="@danila" selected>Danila Viier (Lead)</option>
+              <option value="@alex.rivera">Alex Rivera (Core)</option>
+              <option value="@marcus.vance">Marcus Vance (Graphics)</option>
+              <option value="@sophia.chen">Sophia Chen (QA)</option>
+              <option value="@dmitry.sokolov">Dmitry Sokolov (Systems)</option>
+              <option value="@elena.rostova">Elena Rostova (Tech Art)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Issue Type / Tag</label>
+            <select class="form-input" id="jiraTicketTypeInput" style="background: var(--surface2); color: var(--text);">
+              <option value="JIRA" selected>JIRA ISSUE</option>
+              <option value="TRELLO">TRELLO CARD</option>
+              <option value="PERFORCE">PERFORCE P4</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sprint Target Column</label>
+            <select class="form-input" id="jiraTicketColumnInput" style="background: var(--surface2); color: var(--text);">
+              <option value="todoCardList" selected>📌 To Do / Backlog</option>
+              <option value="inProgressCardList">⚡ In Progress</option>
+              <option value="reviewCardList">🔍 In Review / QA</option>
+              <option value="doneCardList">✅ Done</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-jira" style="flex: 2; justify-content: center; padding: 10px; font-size: 0.9rem;" onclick="submitJiraTicketModal()">🚀 Create Ticket & Sync Feed</button>
+        <button class="btn btn-sm" style="flex: 1; justify-content: center;" onclick="closeCreateJiraTicketModal()">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -1793,23 +1870,87 @@
     function openWorkstationModal() { document.getElementById('workstationModal').classList.add('active'); }
     function closeWorkstationModal() { document.getElementById('workstationModal').classList.remove('active'); }
     function createNewJiraTicket() {
-      const title = prompt('Enter new Jira Ticket Summary:', 'C++ LOD Mesh LOD Streaming Optimization');
-      if (title) {
-        const ticketId = 'UE5-' + Math.floor(4000 + Math.random() * 900);
-        showToast(`🎯 Created Jira Ticket ${ticketId}: ${title}`);
-        const jiraMsg = {
-          id: 'jira_' + Date.now(),
-          author: 'Jira Software Bot',
-          badge: 'JIRA CLOUD 🎯',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: `🎯 **NEW JIRA SPRINT TICKET [${ticketId}]**: ${title}`,
-          reactions: { '📋': 2 },
-          repliesCount: 0
-        };
-        if (!state.messages['trello-jira-board']) state.messages['trello-jira-board'] = [];
-        state.messages['trello-jira-board'].unshift(jiraMsg);
-        if (state.currentChannelId === 'trello-jira-board') renderMessages();
+      openCreateJiraTicketModal();
+    }
+
+    function openCreateJiraTicketModal() {
+      const input = document.getElementById('jiraTicketTitleInput');
+      if (input && !input.value) {
+        input.value = 'C++ Mesh LOD Streaming & Nanite Shading Optimization';
       }
+      document.getElementById('createJiraTicketModal').classList.add('active');
+      if (input) setTimeout(() => input.focus(), 100);
+    }
+
+    function closeCreateJiraTicketModal() {
+      document.getElementById('createJiraTicketModal').classList.remove('active');
+    }
+
+    function submitJiraTicketModal() {
+      const titleInput = document.getElementById('jiraTicketTitleInput');
+      const title = titleInput ? titleInput.value.trim() : '';
+      if (!title) {
+        showToast('❌ Please enter a summary for the Jira ticket.');
+        return;
+      }
+
+      const priority = document.getElementById('jiraTicketPriorityInput').value;
+      const assignee = document.getElementById('jiraTicketAssigneeInput').value;
+      const tagType = document.getElementById('jiraTicketTypeInput').value;
+      const targetColumnId = document.getElementById('jiraTicketColumnInput').value;
+
+      const ticketNum = Math.floor(4000 + Math.random() * 900);
+      const ticketId = tagType === 'TRELLO' ? 'TRELLO CARD' : (tagType === 'PERFORCE' ? 'P4 CL-' + ticketNum : 'JIRA UE5-' + ticketNum);
+
+      // 1. Append Card to Kanban Board Column
+      const targetCol = document.getElementById(targetColumnId) || document.getElementById('todoCardList');
+      if (targetCol) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'kanban-card';
+        cardDiv.setAttribute('onclick', `showToast('${ticketId} Details Opened')`);
+        cardDiv.style.animation = 'fadeIn 0.3s ease-out';
+
+        const tagClass = tagType === 'TRELLO' ? 'trello' : 'jira';
+        cardDiv.innerHTML = `
+          <span class="kanban-tag ${tagClass}">${ticketId}</span>
+          <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">${escapeHtml(title)}</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>${assignee}</b> | Priority: <b style="color: #ff6b81;">${priority}</b></div>
+        `;
+        targetCol.prepend(cardDiv);
+      }
+
+      // Update Column Count Badges
+      updateKanbanCounts();
+
+      // 2. Add Feed Message to #trello-jira-board channel
+      const jiraMsg = {
+        id: 'jira_' + Date.now(),
+        author: 'Jira Software Bot',
+        badge: 'JIRA CLOUD 🎯',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: `🎯 **NEW SPRINT TICKET [${ticketId}]**: ${title}\n*Assignee*: ${assignee} | *Priority*: ${priority}`,
+        reactions: { '📋': 3, '🚀': 1 },
+        repliesCount: 0
+      };
+
+      if (!state.messages['trello-jira-board']) state.messages['trello-jira-board'] = [];
+      state.messages['trello-jira-board'].unshift(jiraMsg);
+      if (state.currentChannelId === 'trello-jira-board') renderMessages();
+
+      closeCreateJiraTicketModal();
+      showToast(`🎯 Created Ticket ${ticketId}: ${title}`);
+    }
+
+    function updateKanbanCounts() {
+      const todoList = document.getElementById('todoCardList');
+      const inProgList = document.getElementById('inProgressCardList');
+      const revList = document.getElementById('reviewCardList');
+      const doneList = document.getElementById('doneCardList');
+
+      if (todoList && document.getElementById('todoCount')) document.getElementById('todoCount').innerText = todoList.children.length;
+      if (inProgList && document.getElementById('inProgressCount')) document.getElementById('inProgressCount').innerText = inProgList.children.length;
+      if (revList && document.getElementById('reviewCount')) document.getElementById('reviewCount').innerText = revList.children.length;
+      if (doneList && document.getElementById('doneCount')) document.getElementById('doneCount').innerText = doneList.children.length;
     }
 
     // Toggle Thread Replies Option in Settings
