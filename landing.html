@@ -552,6 +552,26 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     }
+    .kanban-card[draggable="true"] {
+      cursor: grab;
+    }
+    .kanban-card.dragging {
+      opacity: 0.4;
+      transform: scale(0.95);
+      border-style: dashed;
+      border-color: var(--accent2);
+    }
+    .kanban-card-list.drag-over {
+      background: rgba(124, 92, 255, 0.15) !important;
+      border: 2px dashed var(--accent2) !important;
+      border-radius: 8px;
+      min-height: 80px;
+    }
+    .chat-area.drag-file-over {
+      outline: 3px dashed var(--accent2);
+      outline-offset: -10px;
+      background: rgba(0, 212, 170, 0.05);
+    }
     .kanban-tag {
       font-size: 0.68rem;
       font-weight: 800;
@@ -1080,7 +1100,7 @@
     </div>
 
     <!-- Central Chat View -->
-    <div class="chat-area">
+    <div class="chat-area" id="chatArea">
 
       <!-- Chat Header -->
       <div class="chat-header">
@@ -2016,6 +2036,8 @@
       initAuthSession();
       renderChannelsSidebar();
       renderMessages();
+      initKanbanDragAndDrop();
+      initFileDragAndDrop();
 
       document.getElementById('messageInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -2564,6 +2586,162 @@
       if (inProgList && document.getElementById('inProgressCount')) document.getElementById('inProgressCount').innerText = inProgList.children.length;
       if (revList && document.getElementById('reviewCount')) document.getElementById('reviewCount').innerText = revList.children.length;
       if (doneList && document.getElementById('doneCount')) document.getElementById('doneCount').innerText = doneList.children.length;
+
+      const inlineTodoList = document.getElementById('inlineTodoCardList');
+      const inlineInProgList = document.getElementById('inlineInProgressCardList');
+      const inlineRevList = document.getElementById('inlineReviewCardList');
+      const inlineDoneList = document.getElementById('inlineDoneCardList');
+
+      if (inlineTodoList && document.getElementById('inlineTodoCount')) document.getElementById('inlineTodoCount').innerText = inlineTodoList.children.length;
+      if (inlineInProgList && document.getElementById('inlineInProgressCount')) document.getElementById('inlineInProgressCount').innerText = inlineInProgList.children.length;
+      if (inlineRevList && document.getElementById('inlineReviewCount')) document.getElementById('inlineReviewCount').innerText = inlineRevList.children.length;
+      if (inlineDoneList && document.getElementById('inlineDoneCount')) document.getElementById('inlineDoneCount').innerText = inlineDoneList.children.length;
+    }
+
+    // ── DRAG & DROP HANDLERS FOR KANBAN CARDS & FILE ATTACHMENTS ──
+    let draggedKanbanCard = null;
+
+    function handleKanbanDragStart(e) {
+      draggedKanbanCard = e.currentTarget;
+      e.currentTarget.classList.add('dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try {
+          e.dataTransfer.setData('text/plain', e.currentTarget.outerHTML);
+        } catch(err) {}
+      }
+    }
+
+    function handleKanbanDragEnd(e) {
+      if (e.currentTarget) e.currentTarget.classList.remove('dragging');
+      document.querySelectorAll('.kanban-card-list').forEach(list => list.classList.remove('drag-over'));
+      draggedKanbanCard = null;
+    }
+
+    function handleKanbanDragOver(e) {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      const list = e.currentTarget;
+      if (list && !list.classList.contains('drag-over')) {
+        list.classList.add('drag-over');
+      }
+    }
+
+    function handleKanbanDragLeave(e) {
+      if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleKanbanDrop(e) {
+      e.preventDefault();
+      const targetList = e.currentTarget;
+      if (!targetList) return;
+      targetList.classList.remove('drag-over');
+
+      if (draggedKanbanCard) {
+        targetList.appendChild(draggedKanbanCard);
+        
+        const colHeader = targetList.parentElement ? targetList.parentElement.querySelector('.kanban-col-header span') : null;
+        const colName = colHeader ? colHeader.innerText : 'new status';
+
+        updateKanbanCounts();
+
+        if (targetList.id.startsWith('inline')) {
+          syncModalFromInline();
+        } else {
+          syncInlineFromModal();
+        }
+
+        showToast(`⚡ Ticket moved to ${colName}!`);
+      }
+    }
+
+    function syncInlineFromModal() {
+      const map = [
+        { m: 'todoCardList', i: 'inlineTodoCardList' },
+        { m: 'inProgressCardList', i: 'inlineInProgressCardList' },
+        { m: 'reviewCardList', i: 'inlineReviewCardList' },
+        { m: 'doneCardList', i: 'inlineDoneCardList' }
+      ];
+      map.forEach(pair => {
+        const mEl = document.getElementById(pair.m);
+        const iEl = document.getElementById(pair.i);
+        if (mEl && iEl) {
+          iEl.innerHTML = mEl.innerHTML;
+        }
+      });
+      updateKanbanCounts();
+      initKanbanDragAndDrop();
+    }
+
+    function syncModalFromInline() {
+      const map = [
+        { m: 'todoCardList', i: 'inlineTodoCardList' },
+        { m: 'inProgressCardList', i: 'inlineInProgressCardList' },
+        { m: 'reviewCardList', i: 'inlineReviewCardList' },
+        { m: 'doneCardList', i: 'inlineDoneCardList' }
+      ];
+      map.forEach(pair => {
+        const mEl = document.getElementById(pair.m);
+        const iEl = document.getElementById(pair.i);
+        if (mEl && iEl) {
+          mEl.innerHTML = iEl.innerHTML;
+        }
+      });
+      updateKanbanCounts();
+      initKanbanDragAndDrop();
+    }
+
+    function initKanbanDragAndDrop() {
+      document.querySelectorAll('.kanban-card').forEach(card => {
+        card.setAttribute('draggable', 'true');
+        card.removeEventListener('dragstart', handleKanbanDragStart);
+        card.removeEventListener('dragend', handleKanbanDragEnd);
+        card.addEventListener('dragstart', handleKanbanDragStart);
+        card.addEventListener('dragend', handleKanbanDragEnd);
+      });
+
+      document.querySelectorAll('.kanban-card-list').forEach(list => {
+        list.removeEventListener('dragover', handleKanbanDragOver);
+        list.removeEventListener('dragleave', handleKanbanDragLeave);
+        list.removeEventListener('drop', handleKanbanDrop);
+        list.addEventListener('dragover', handleKanbanDragOver);
+        list.addEventListener('dragleave', handleKanbanDragLeave);
+        list.addEventListener('drop', handleKanbanDrop);
+      });
+    }
+
+    function initFileDragAndDrop() {
+      const chatArea = document.getElementById('chatArea') || document.querySelector('.chat-area');
+      if (!chatArea) return;
+
+      ['dragenter', 'dragover'].forEach(evtName => {
+        chatArea.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          chatArea.classList.add('drag-file-over');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(evtName => {
+        chatArea.addEventListener(evtName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          chatArea.classList.remove('drag-file-over');
+        }, false);
+      });
+
+      chatArea.addEventListener('drop', (e) => {
+        const files = e.dataTransfer ? e.dataTransfer.files : null;
+        if (files && files.length > 0) {
+          const file = files[0];
+          state.selectedComposerAttachment = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          const statusElem = document.getElementById('composerAttachmentStatus');
+          if (statusElem) {
+            statusElem.innerHTML = `<span style="color: var(--accent2); font-weight: 700;">📎 Drag & Drop Attached: ${state.selectedComposerAttachment}</span>`;
+          }
+          showToast(`📎 File Attached via Drag & Drop: ${file.name}`);
+        }
+      }, false);
     }
 
     // Toggle Thread Replies Option in Settings
