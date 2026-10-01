@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slack Clone — Premium Workspace & Real-Time Client Leads Engine</title>
-  <meta name="description" content="A feature-complete, modern Slack Clone web application featuring live channels, thread replies, emoji reactions, instant direct messaging, lead engine bot, user auth, and admin controls." />
+  <title>Slack Clone — Game Studio Architecture, UE5 Packaging CI/CD & Playtest Loop</title>
+  <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks (Perforce/GitHub), and an integrated playtest bug reporting loop." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -138,9 +138,18 @@
       opacity: 0.9;
       transform: translateY(-1px);
     }
+    .btn-danger {
+      background: rgba(255, 71, 87, 0.15);
+      border: 1px solid var(--danger);
+      color: #ff6b81;
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
     .btn-sm {
-      padding: 4px 8px;
-      font-size: 0.75rem;
+      padding: 4px 10px;
+      font-size: 0.76rem;
     }
 
     /* ── Main Slack Workspace Layout ── */
@@ -186,15 +195,6 @@
       color: #fff;
       border-radius: 10px;
       box-shadow: 0 0 14px rgba(124, 92, 255, 0.5);
-    }
-    .workspace-icon.active::before {
-      content: '';
-      position: absolute;
-      left: -12px;
-      width: 4px;
-      height: 24px;
-      background: #fff;
-      border-radius: 0 4px 4px 0;
     }
 
     /* Sidebar Navigation (Channels & DMs) */
@@ -265,14 +265,6 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 4px;
-    }
-    .sidebar-section-title .add-btn {
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: color 0.2s;
-    }
-    .sidebar-section-title .add-btn:hover {
-      color: #fff;
     }
 
     .channel-item {
@@ -406,7 +398,7 @@
     .msg-badge {
       font-size: 0.68rem;
       font-weight: 700;
-      padding: 1px 5px;
+      padding: 1px 6px;
       border-radius: 4px;
       background: rgba(124, 92, 255, 0.2);
       color: var(--accent2);
@@ -421,22 +413,70 @@
       line-height: 1.5;
       color: #d8d8e5;
     }
-    .msg-attachments {
-      display: flex;
-      gap: 8px;
+
+    /* Automated Build & Webhook Alert Cards */
+    .build-alert-card {
+      background: rgba(26, 26, 46, 0.9);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      padding: 16px;
       margin-top: 8px;
-      flex-wrap: wrap;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
     }
-    .attachment-chip {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
+    .build-alert-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent2);
+    }
+    .build-alert-card.broken::before {
+      background: var(--danger);
+    }
+    .card-header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      color: var(--accent2);
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-weight: 800;
+      font-size: 0.98rem;
+      color: #fff;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+      background: rgba(0,0,0,0.25);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .card-stat {
+      font-size: 0.8rem;
+    }
+    .card-stat .lbl {
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .card-stat .val {
+      color: var(--text);
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Bug Tracker Card */
+    .bug-card {
+      background: rgba(255, 71, 87, 0.05);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 8px;
     }
 
     /* Message Hover Toolbar */
@@ -493,9 +533,8 @@
       gap: 4px;
       transition: all 0.15s;
     }
-    .reaction-pill:hover, .reaction-pill.reacted {
+    .reaction-pill:hover {
       border-color: var(--accent);
-      background: rgba(124, 92, 255, 0.15);
       color: #fff;
     }
 
@@ -554,11 +593,6 @@
       justify-content: space-between;
       padding: 6px 12px;
     }
-    .composer-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
 
     /* ── Right Thread Panel ── */
     .thread-panel {
@@ -577,10 +611,6 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-    }
-    .thread-header h4 {
-      font-size: 0.95rem;
-      font-weight: 800;
     }
     .close-thread-btn {
       background: none;
@@ -609,7 +639,7 @@
       border: 1px solid var(--border-bright);
       border-radius: 16px;
       width: 100%;
-      max-width: 460px;
+      max-width: 500px;
       padding: 28px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.6);
       animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -621,7 +651,7 @@
     .modal-title {
       font-size: 1.25rem;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .modal-subtitle {
       font-size: 0.85rem;
@@ -662,7 +692,6 @@
       flex-direction: column;
       gap: 10px;
       z-index: 2000;
-      pointer-events: none;
     }
     .toast {
       background: var(--surface2);
@@ -674,7 +703,6 @@
       font-weight: 600;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       animation: toastIn 0.3s ease-out;
-      pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -683,56 +711,29 @@
       from { opacity: 0; transform: translateX(30px); }
       to { opacity: 1; transform: translateX(0); }
     }
-
-    /* Special Lead Card in #leads-and-sales */
-    .lead-card {
-      background: rgba(0, 212, 170, 0.05);
-      border: 1px solid rgba(0, 212, 170, 0.2);
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 8px;
-    }
-    .lead-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .lead-title {
-      font-weight: 700;
-      color: var(--accent2);
-      font-size: 0.95rem;
-    }
-    .lead-platform {
-      background: var(--surface2);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
   </style>
 </head>
 <body>
 
-  <!-- ── Top Navigation ── -->
+  <!-- ── Top Navigation Bar ── -->
   <div class="top-nav">
     <div style="display: flex; align-items: center; gap: 10px;">
-      <div style="width: 26px; height: 26px; background: var(--gradient); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem;">S</div>
-      <span style="font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em;">Slack Hub v4.2</span>
+      <div style="width: 26px; height: 26px; background: var(--gradient); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem;">🎮</div>
+      <span style="font-weight: 800; font-size: 0.95rem;">Unreal Engine Studio Slack</span>
     </div>
 
     <div class="top-nav-center">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" placeholder="Search TrillionaireViier workspace, messages, or files... (Ctrl + K)" />
+      <input type="text" class="search-input" placeholder="Search Unreal Engine builds, Perforce changelists, or playtest logs..." />
     </div>
 
     <div class="top-nav-right">
       <div class="status-badge">
         <span class="status-dot"></span>
-        <span id="userStatusText">Admin Online</span>
+        <span id="userStatusText">Lead Dev Online</span>
       </div>
-      <button class="btn btn-sm" onclick="openAuthModal()">🔑 Auth / 2FA</button>
-      <button class="btn btn-primary btn-sm" onclick="openCreateChannelModal()">+ New Channel</button>
+      <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 /playtest Bug Report</button>
+      <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">🎮 Trigger UE5 Packaging</button>
     </div>
   </div>
 
@@ -741,81 +742,73 @@
 
     <!-- Workspace Rail -->
     <div class="workspace-rail">
-      <div class="workspace-icon active" title="TrillionaireViier Team">T</div>
-      <div class="workspace-icon" title="Parser Engine Bot Workspace">P</div>
-      <div class="workspace-icon" title="Wayly Explorer HQ">W</div>
-      <div style="margin-top: auto;" class="workspace-icon" onclick="openCreateChannelModal()" title="Add Workspace">+</div>
+      <div class="workspace-icon active" title="Unreal Engine 5 Game Studio HQ">UE5</div>
+      <div class="workspace-icon" title="Code & Perforce Core">P4</div>
+      <div class="workspace-icon" title="CI/CD Build Pipeline">CI</div>
+      <div style="margin-top: auto;" class="workspace-icon" onclick="openPlaytestModal()" title="Playtest Bug Feedback">+</div>
     </div>
 
-    <!-- Channels & DMs Sidebar -->
+    <!-- Channels Sidebar: Distraction-Free Architecture -->
     <div class="channels-sidebar">
       <div class="sidebar-header">
         <div>
-          <h2 id="workspaceName">TrillionaireViier HQ</h2>
-          <div style="font-size: 0.72rem; color: var(--accent2); font-weight: 600;">● 24 Members Active</div>
+          <h2>Unreal Engine 5 Studio</h2>
+          <div style="font-size: 0.72rem; color: var(--accent2); font-weight: 600;">● 32 Devs Online</div>
         </div>
-        <button class="compose-btn" title="New Message" onclick="openCreateChannelModal()">✏️</button>
       </div>
 
       <div class="sidebar-scroll">
 
-        <!-- Channels Section -->
+        <!-- 1. Distraction-Free Studio Channels -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">
-            <span>Channels</span>
-            <span class="add-btn" onclick="openCreateChannelModal()">+</span>
+            <span>Studio Channels</span>
           </div>
-          <div class="channel-item active" onclick="switchChannel('general', '#general', 'General team discussion')">
-            <span>#</span> <span>general</span>
+          <div class="channel-item active" onclick="switchChannel('announcements', '📢 #announcements', 'Studio milestone announcements and release targets')">
+            <span>📢</span> <span>announcements</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('leads-and-sales', '#leads-and-sales', 'Real-time European client leads engine feed')">
-            <span>#</span> <span>leads-and-sales</span>
-            <span class="unread-pill">14</span>
+          <div class="channel-item" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')">
+            <span>💻</span> <span>code-updates</span>
+            <span class="unread-pill">4</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dev-team', '#dev-team', 'Engineering & Architecture updates')">
-            <span>#</span> <span>dev-team</span>
+          <div class="channel-item" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')">
+            <span>📦</span> <span>builds-playtest</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('announcements', '#announcements', 'Official company announcements')">
-            <span>#</span> <span>announcements</span>
+          <div class="channel-item" onclick="switchChannel('art-assets', '🎨 #art-assets', 'Nanite 3D meshes, Lumen lighting & sound assets')">
+            <span>🎨</span> <span>art-assets</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('design-system', '#design-system', 'UI/UX Glassmorphism components')">
-            <span>#</span> <span>design-system</span>
-          </div>
-          <div class="channel-item" onclick="switchChannel('random', '#random', 'Coffee break & non-work chatter')">
-            <span>#</span> <span>random</span>
+          <div class="channel-item" onclick="switchChannel('bugs', '🐛 #bugs', 'Tracked playtest bug reports, logs, and stack trace dumps')">
+            <span>🐛</span> <span>bugs</span>
+            <span class="unread-pill">2</span>
           </div>
         </div>
 
-        <!-- Direct Messages Section -->
+        <!-- 2. Direct Messages -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">
-            <span>Direct Messages</span>
-            <span class="add-btn">+</span>
+            <span>Core Engineers</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-danila', '💬 Danila Viier (You)', 'Direct message thread')">
+          <div class="channel-item" onclick="switchChannel('dm-danila', '💬 Danila Viier (Lead Architect)', 'Direct engineering chat')">
             <span class="dm-status-dot online"></span> <span>Danila Viier</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-bot', '⚡ Parser Engine Bot', 'AI Scraper Assistant Direct Stream')">
-            <span class="dm-status-dot online"></span> <span>Parser Bot AI</span>
+          <div class="channel-item" onclick="switchChannel('dm-alex', '💬 Alex Rivera (Physics Dev)', 'Unreal C++ locomotion chat')">
+            <span class="dm-status-dot online"></span> <span>Alex Rivera</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-elon', '💬 Elon Musk', 'SpaceX & X integration chat')">
-            <span class="dm-status-dot"></span> <span>Elon Musk</span>
-          </div>
-          <div class="channel-item" onclick="switchChannel('dm-sam', '💬 Sam Altman', 'OpenAI & LLM API partnership')">
-            <span class="dm-status-dot online"></span> <span>Sam Altman</span>
+          <div class="channel-item" onclick="switchChannel('dm-sarah', '💬 Sarah Miller (QA Lead)', 'Playtest feedback triage')">
+            <span class="dm-status-dot online"></span> <span>Sarah Miller</span>
           </div>
         </div>
 
-        <!-- Apps Section -->
+        <!-- 3. Webhooks & Integrations -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">
-            <span>Apps & Integrations</span>
+            <span>Automation Webhooks</span>
           </div>
-          <div class="channel-item" onclick="showToast('⚡ Vercel Deployment Bot: All 3 Threads Live & Healthy!')">
-            <span>⚡</span> <span>Vercel Deployments</span>
+          <div class="channel-item" onclick="showToast('⚡ Perforce Helix Core Swarm Webhook Connected')">
+            <span>⚡</span> <span>Perforce Swarm</span>
           </div>
-          <div class="channel-item" onclick="showToast('🤖 AI Assistant ready for NLP prompt queries.')">
-            <span>🤖</span> <span>AI Copilot</span>
+          <div class="channel-item" onclick="showToast('🤖 UE5 Incredibuild Packaging Bot Active')">
+            <span>🤖</span> <span>UE5 Build Bot</span>
           </div>
         </div>
 
@@ -828,43 +821,40 @@
       <!-- Chat Header -->
       <div class="chat-header">
         <div class="chat-header-info">
-          <h3 id="currentChannelName">#general</h3>
-          <p id="currentChannelDesc">Company-wide announcements and general discussion</p>
+          <h3 id="currentChannelName">📢 #announcements</h3>
+          <p id="currentChannelDesc">Studio milestone announcements and release targets</p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <button class="btn btn-sm" onclick="exportChannelHistory()">📥 Export Log</button>
-          <button class="btn btn-sm" onclick="triggerLeadFetch()">🔄 Refresh Leads</button>
+          <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Log Bug (/playtest)</button>
+          <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">📦 Package UE5 Win64</button>
         </div>
       </div>
 
       <!-- Messages Stream -->
       <div class="message-stream" id="messageStream">
-        <!-- Messages rendered dynamically by JS -->
+        <!-- Rendered by JS -->
       </div>
 
       <!-- Message Composer -->
       <div class="composer-wrapper">
         <div class="composer-box">
           <div class="composer-toolbar">
-            <button class="tool-btn" onclick="insertFormatting('bold')" title="Bold"><b>B</b></button>
-            <button class="tool-btn" onclick="insertFormatting('italic')" title="Italic"><i>I</i></button>
-            <button class="tool-btn" onclick="insertFormatting('code')" title="Code"><code>&lt;/&gt;</code></button>
-            <button class="tool-btn" onclick="insertFormatting('link')" title="Link">🔗</button>
+            <button class="tool-btn" onclick="insertFormatting('bold')"><b>B</b></button>
+            <button class="tool-btn" onclick="insertFormatting('italic')"><i>I</i></button>
+            <button class="tool-btn" onclick="insertFormatting('code')"><code>&lt;/&gt;</code></button>
             <div style="margin-left: auto; display: flex; gap: 4px;">
-              <button class="tool-btn" onclick="attachFile()" title="Attach file">📎</button>
-              <button class="tool-btn" onclick="insertEmoji('🚀')" title="Quick Emoji">🚀</button>
+              <button class="tool-btn" onclick="openPlaytestModal()" title="Slash command /bug">🐛 Bug</button>
+              <button class="tool-btn" onclick="attachLogFile()" title="Attach Unreal Log File">📎 Attach Log</button>
             </div>
           </div>
 
-          <textarea class="composer-input" id="messageInput" placeholder="Message #general... (Press Enter to send, Shift+Enter for new line)"></textarea>
+          <textarea class="composer-input" id="messageInput" placeholder="Message #announcements... (Try typing /playtest or /bug for feedback modal)"></textarea>
 
           <div class="composer-footer">
             <div style="font-size: 0.75rem; color: var(--text-dim);">
-              <span id="typingIndicator">⚡ 3-Thread Parser Bot online</span>
+              <span>⚡ UE5 Packaging Bot online (Incredibuild 32 Nodes)</span>
             </div>
-            <div class="composer-actions">
-              <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send ✈️</button>
-            </div>
+            <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send ✈️</button>
           </div>
         </div>
       </div>
@@ -877,9 +867,7 @@
         <h4>Thread Reply</h4>
         <button class="close-thread-btn" onclick="closeThread()">✕</button>
       </div>
-      <div class="message-stream" id="threadStream" style="padding: 14px;">
-        <!-- Thread messages rendered dynamically -->
-      </div>
+      <div class="message-stream" id="threadStream" style="padding: 14px;"></div>
       <div class="composer-wrapper" style="padding: 10px; background: var(--sidebar-bg);">
         <textarea class="composer-input" id="threadInput" placeholder="Reply to thread..." style="min-height: 42px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;"></textarea>
         <button class="btn btn-primary btn-sm" style="margin-top: 6px; width: 100%;" onclick="sendThreadReply()">Reply 💬</button>
@@ -890,233 +878,283 @@
 
   <!-- ── Modals ── -->
 
-  <!-- Auth & 2FA Modal -->
-  <div class="modal-overlay" id="authModal">
+  <!-- Playtest Bug Feedback & Slash Command Modal -->
+  <div class="modal-overlay" id="playtestModal">
     <div class="modal-card">
-      <div class="modal-title">Admin Account & 2FA Control</div>
-      <div class="modal-subtitle">Secure admin credentials & two-factor authentication panel.</div>
+      <div class="modal-title">🐛 Playtest Bug Report Submission</div>
+      <div class="modal-subtitle">Submit playtest feedback, log files, and stack traces directly into <b>#bugs</b>.</div>
 
-      <div id="authStep1">
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-input" id="loginEmail" value="admin@parserforall.app" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Hardened Password</label>
-          <input type="password" class="form-input" id="loginPassword" value="P4A-Admin#2026!SecuredSuperUser" />
-        </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="proceedTo2FA()">Verify & Proceed to 2FA PIN →</button>
+      <div class="form-group">
+        <label class="form-label">Bug Summary / Issue Title</label>
+        <input type="text" class="form-input" id="bugTitleInput" placeholder="e.g. Character locomotion physics crash on slopes in Level 3" />
       </div>
 
-      <div id="authStep2" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Enter 2FA Verification PIN (Hint: 994-827)</label>
-          <input type="text" class="form-input" id="pinInput" placeholder="000-000" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; font-weight: 800;" />
+      <div class="form-group" style="display: flex; gap: 12px;">
+        <div style="flex: 1;">
+          <label class="form-label">Severity Level</label>
+          <select class="form-input" id="bugSeverityInput">
+            <option value="BLOCKER">🔴 BLOCKER (Crash / Progress Stopper)</option>
+            <option value="HIGH" selected>🟧 HIGH (Feature Broken)</option>
+            <option value="MEDIUM">🟦 MEDIUM (Minor Glitch)</option>
+            <option value="COSMETIC">⬜ COSMETIC (UI/Visual)</option>
+          </select>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="verify2FA()">Authorize Session 🔒</button>
+        <div style="flex: 1;">
+          <label class="form-label">Build Version</label>
+          <input type="text" class="form-input" id="bugBuildVersion" value="v5.4.2-Win64-B1492" readonly />
+        </div>
       </div>
 
-      <div id="authProfile" style="display: none;">
-        <div style="background: rgba(0,212,170,0.1); border: 1px solid var(--accent2); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
-          <div style="font-weight: 800; color: var(--accent2);">ADMIN опис профиля</div>
-          <p style="font-size: 0.82rem; margin-top: 4px;">Superuser profile active. Scraper 3-thread REST API access granted.</p>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Profile Description</label>
-          <textarea class="form-input" id="profileBioInput" rows="3">Head of Infrastructure & Real-Time European Data Stream Architecture.</textarea>
-        </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="saveProfileBio()">Save Profile Bio</button>
+      <div class="form-group">
+        <label class="form-label">Reproduction Steps & Description</label>
+        <textarea class="form-input" id="bugDescInput" rows="3" placeholder="1. Load Level 3 Cave Dungeon&#10;2. Sprint up steep slope using Sprint key&#10;3. Fatal Error: Access Violation in CharacterMovementComponent.cpp:142"></textarea>
       </div>
 
-      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeAuthModal()">Close</button>
+      <div class="form-group">
+        <label class="form-label">Attach Unreal Log (`Saved/Logs/UnrealEngine.log`)</label>
+        <input type="text" class="form-input" id="bugLogFileInput" value="UnrealEngine_Playtest_CrashDump_2026.log" />
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="submitPlaytestReport()">Submit Playtest Bug to #bugs 🚀</button>
+      <button class="btn btn-sm" style="margin-top: 10px; width: 100%;" onclick="closePlaytestModal()">Cancel</button>
     </div>
   </div>
 
-  <!-- Create Channel Modal -->
-  <div class="modal-overlay" id="createChannelModal">
-    <div class="modal-card">
-      <div class="modal-title">Create a New Channel</div>
-      <div class="modal-subtitle">Channels are where your team communicates about specific topics.</div>
-      <div class="form-group">
-        <label class="form-label">Channel Name</label>
-        <input type="text" class="form-input" id="newChannelName" placeholder="e.g. europe-leads-2026" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description (Optional)</label>
-        <input type="text" class="form-input" id="newChannelDesc" placeholder="What is this channel about?" />
-      </div>
-      <button class="btn btn-primary" style="width: 100%;" onclick="createNewChannel()">Create Channel</button>
-      <button class="btn btn-sm" style="margin-top: 10px; width: 100%;" onclick="closeCreateChannelModal()">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Toast Notification Area -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- ── Application Logic ── -->
   <script>
-    // State Store
     const state = {
-      currentChannelId: 'general',
+      currentChannelId: 'announcements',
       channels: {
-        'general': { name: '#general', desc: 'Company-wide announcements and general discussion' },
-        'leads-and-sales': { name: '#leads-and-sales', desc: 'Real-time European client leads engine feed from 20+ platforms' },
-        'dev-team': { name: '#dev-team', desc: 'Engineering & Architecture updates' },
-        'announcements': { name: '#announcements', desc: 'Official company announcements' },
-        'design-system': { name: '#design-system', desc: 'UI/UX Glassmorphism components' },
-        'random': { name: '#random', desc: 'Coffee break & non-work chatter' },
-        'dm-danila': { name: '💬 Danila Viier (You)', desc: 'Direct message thread with Danila' },
-        'dm-bot': { name: '⚡ Parser Engine Bot', desc: 'AI Scraper Assistant Direct Stream' },
-        'dm-elon': { name: '💬 Elon Musk', desc: 'SpaceX & X integration chat' },
-        'dm-sam': { name: '💬 Sam Altman', desc: 'OpenAI & LLM API partnership' }
+        'announcements': { name: '📢 #announcements', desc: 'Studio milestone announcements and release targets' },
+        'code-updates': { name: '💻 #code-updates', desc: 'Perforce submit alerts & GitHub C++ pull requests' },
+        'builds-playtest': { name: '📦 #builds-playtest', desc: 'Automated UE5 Packaging CI/CD Windows standalone builds' },
+        'art-assets': { name: '🎨 #art-assets', desc: 'Nanite 3D meshes, Lumen lighting & sound assets' },
+        'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' }
       },
       messages: {
-        'general': [
+        'announcements': [
           {
             id: 'm1',
             author: 'Danila Viier',
-            badge: 'FOUNDER',
-            time: '10:14 AM',
-            text: 'Welcome to the official Slack Hub workspace! 🚀 We have deployed our 3-thread concurrent REST parser on Vercel.',
-            reactions: { '👍': 6, '🚀': 14, '❤️': 8 },
-            attachments: ['vercel_deploy_v4.pdf', 'architecture_diagram.png'],
-            repliesCount: 3
-          },
-          {
-            id: 'm2',
-            author: 'Sarah Miller',
-            badge: 'SALES LEAD',
-            time: '10:22 AM',
-            text: 'Checking `#leads-and-sales` for live European client requests! The lead capture rate is up 340% this week.',
-            reactions: { '🔥': 9, '👏': 5 },
-            repliesCount: 0
+            badge: 'LEAD ARCHITECT',
+            time: '09:00 AM',
+            text: '🎮 **UNREAL ENGINE 5.4.2 MILESTONE MILEPOST REACHED!** All core locomotion, Lumen GI lighting, and packaging pipelines are validated.',
+            reactions: { '🚀': 14, '🔥': 19, '🙌': 8 },
+            repliesCount: 2
           }
         ],
-        'leads-and-sales': [
+        'code-updates': [
           {
-            id: 'm3',
-            author: 'Parser Engine Bot',
-            badge: 'AI BOT ⚡',
-            time: 'Just now',
-            text: '🎯 **NEW HIGH-INTENT LEAD DETECTED FROM EUROPEAN NETWORK**',
-            isLead: true,
-            leadData: {
-              title: 'Looking for bulk electronics supplier in Germany/France (Budget €45,000)',
-              platform: 'Threads / Wallapop',
-              contact: '@tech_buyer_de',
-              intentScore: '98%'
+            id: 'm2',
+            author: 'Perforce Helix Core Webhook',
+            badge: 'P4 SWARM ⚡',
+            time: '10:15 AM',
+            text: '⚡ **P4 CHANGELIST SUBMITTED (#49281)** by `@alex.rivera`',
+            isPerforce: true,
+            p4Data: {
+              cl: '#49281',
+              author: 'alex.rivera',
+              files: '32 C++ & Asset files',
+              desc: 'Refactored C++ locomotion component & fixed slope collision physics.',
+              reviewUrl: 'http://swarm.gamestudio.internal/changes/49281'
             },
-            reactions: { '🚀': 18, '💰': 12 },
-            repliesCount: 2
+            reactions: { '✅': 11 },
+            repliesCount: 0
           },
           {
-            id: 'm4',
-            author: 'Parser Engine Bot',
-            badge: 'AI BOT ⚡',
-            time: '2 mins ago',
-            text: '🎯 **NEW QUALIFIED INQUIRY — LUXURY WATCH & FASHION PARSER**',
-            isLead: true,
-            leadData: {
-              title: 'Seeking API endpoint for live catalog synchronization of luxury timepieces',
-              platform: 'LinkedIn / Allegro',
-              contact: 'benjamin.fr@watchtrade.eu',
-              intentScore: '94%'
+            id: 'm3',
+            author: 'GitHub Webhook Bot',
+            badge: 'GITHUB CI 🔴',
+            time: '10:22 AM',
+            text: '🔴 **BROKEN BUILD ALERT — PULL REQUEST #142 FAILED COMPILATION**',
+            isBrokenBuild: true,
+            brokenData: {
+              pr: 'PR #142 (Feature/InventorySync)',
+              author: 'dev.junior',
+              error: 'UnrealBuildTool Error: C2039 "GetWorldContext": is not a member of "UGameInstance"',
+              file: 'Source/GameCore/Private/GameInstance.cpp:142'
             },
-            reactions: { '🔥': 7 },
+            reactions: { '👀': 5 },
             repliesCount: 1
           }
         ],
-        'dev-team': [
+        'builds-playtest': [
+          {
+            id: 'm4',
+            author: 'UE5 CI/CD Packaging Bot',
+            badge: 'AUTOMATED BUILD 📦',
+            time: '11:00 AM',
+            text: '🎮 **UNREAL ENGINE 5.4.2 — STANDALONE WINDOWS BUILD PACKAGED**',
+            isBuildAlert: true,
+            buildData: {
+              version: 'v5.4.2-Win64-B1492',
+              status: '🟢 PASS / PACKAGED',
+              arch: 'Windows Standalone (DX12 / Lumen / Nanite)',
+              duration: '18 min 42 sec (32 Incredibuild Nodes)',
+              s3Url: 'https://s3.amazonaws.com/ue5-studio-builds/Build_v5.4.2_Win64.zip',
+              changelog: [
+                'b49f8a: Fixed C++ character locomotion physics crash on slopes',
+                'e210c4: Updated Lumen GI post-processing settings for Cave Dungeon',
+                'f9901d: Integrated FMOD spatial audio triggers'
+              ]
+            },
+            reactions: { '🚀': 22, '🎉': 16 },
+            repliesCount: 3
+          }
+        ],
+        'bugs': [
           {
             id: 'm5',
-            author: 'Alex Rivera',
-            badge: 'TECH LEAD',
-            time: '09:45 AM',
-            text: 'All 3 concurrent REST scraping threads are responding in <300ms on Vercel Edge Serverless endpoints! ⚡',
-            reactions: { '⚡': 11, '💯': 7 },
-            repliesCount: 0
+            author: 'Sarah Miller',
+            badge: 'QA LEAD 🐛',
+            time: '11:30 AM',
+            text: '🚨 **NEW PLAYTEST BUG SUBMITTED [BUG-2026-0891]**',
+            isBug: true,
+            bugData: {
+              id: 'BUG-2026-0891',
+              title: 'Fatal Error: Access Violation in CharacterMovementComponent.cpp on slope sprint',
+              severity: '🔴 BLOCKER',
+              build: 'v5.4.2-Win64-B1492',
+              reporter: 'Sarah Miller',
+              logFile: 'UnrealEngine_CrashDump_2026.log'
+            },
+            reactions: { '🚨': 8 },
+            repliesCount: 2
           }
         ]
       },
       threads: {
         'm1': [
-          { author: 'Alex Rivera', time: '10:16 AM', text: 'Awesome! All API endpoints `/api/slack/messages` are active.' },
-          { author: 'Sarah Miller', time: '10:18 AM', text: 'Is the 2FA PIN still `994-827`?' },
-          { author: 'Danila Viier', time: '10:20 AM', text: 'Yes, 2FA code is `994-827` for admin access!' }
+          { author: 'Alex Rivera', time: '09:05 AM', text: 'Perforce submit changelist #49281 ready for review!' }
         ],
-        'm3': [
-          { author: 'Sarah Miller', time: 'Just now', text: 'Claimed this lead! Sending quote to `@tech_buyer_de` now.' }
+        'm4': [
+          { author: 'Sarah Miller', time: '11:02 AM', text: 'Downloaded Windows Standalone zip. Starting playtest now!' }
         ]
       },
       activeThreadMsgId: null
     };
 
-    // DOM Elements & Initialization
     document.addEventListener('DOMContentLoaded', () => {
       renderMessages();
 
-      // Enter key for composer
       document.getElementById('messageInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          sendMessage();
+          const val = e.target.value.trim();
+          if (val.startsWith('/playtest') || val.startsWith('/bug')) {
+            e.target.value = '';
+            openPlaytestModal();
+          } else {
+            sendMessage();
+          }
         }
       });
     });
 
-    // Render Messages for Active Channel
     function renderMessages() {
       const container = document.getElementById('messageStream');
-      const channelMsgs = state.messages[state.currentChannelId] || [];
+      const msgs = state.messages[state.currentChannelId] || [];
 
-      if (channelMsgs.length === 0) {
+      if (msgs.length === 0) {
         container.innerHTML = `
           <div style="text-align: center; padding: 40px 0; color: var(--text-dim);">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">💬</div>
-            <h3>This is the start of ${state.channels[state.currentChannelId]?.name || '#channel'}</h3>
-            <p style="font-size: 0.85rem; margin-top: 4px;">Send a message to kick off the conversation!</p>
+            <h3>Start of ${state.channels[state.currentChannelId]?.name}</h3>
+            <p style="font-size: 0.85rem; margin-top: 4px;">Send a message or trigger a webhook alert!</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = channelMsgs.map(msg => {
+      container.innerHTML = msgs.map(msg => {
+        let alertHtml = '';
+        if (msg.isBuildAlert && msg.buildData) {
+          const changelogItems = msg.buildData.changelog.map(c => `<li>${c}</li>`).join('');
+          alertHtml = `
+            <div class="build-alert-card">
+              <div class="card-header">
+                <span class="card-title">${msg.buildData.version}</span>
+                <span class="msg-badge" style="background: rgba(0,212,170,0.2); color: var(--accent2);">${msg.buildData.status}</span>
+              </div>
+              <div class="card-grid">
+                <div class="card-stat"><div class="lbl">Architecture</div><div class="val">${msg.buildData.arch}</div></div>
+                <div class="card-stat"><div class="lbl">Build Duration</div><div class="val">${msg.buildData.duration}</div></div>
+              </div>
+              <div style="font-size: 0.82rem; margin: 8px 0; color: var(--text-dim);"><b>Recent Changelog:</b><ul style="padding-left: 18px; margin-top: 4px; color: var(--text);">${changelogItems}</ul></div>
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <a href="${msg.buildData.s3Url}" target="_blank" class="btn btn-primary btn-sm">💾 Download Win64 Standalone Zip (14.2 GB)</a>
+                <button class="btn btn-sm" onclick="showToast('CDN Mirror Link Copied to Clipboard!')">🔗 Copy CDN Mirror</button>
+              </div>
+            </div>
+          `;
+        }
+
+        if (msg.isPerforce && msg.p4Data) {
+          alertHtml = `
+            <div class="build-alert-card" style="border-color: rgba(124, 92, 255, 0.4);">
+              <div class="card-header">
+                <span class="card-title">Perforce Submit ${msg.p4Data.cl}</span>
+                <span class="msg-badge">P4 SWARM</span>
+              </div>
+              <div style="font-size: 0.88rem; color: var(--text); margin-bottom: 6px;">${msg.p4Data.desc}</div>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Files: <b>${msg.p4Data.files}</b> | Author: <b>@${msg.p4Data.author}</b></div>
+              <div style="margin-top: 10px;">
+                <button class="btn btn-sm" onclick="showToast('Opening Perforce Swarm Code Review Link...')">🔍 View Swarm Diff (${msg.p4Data.cl})</button>
+              </div>
+            </div>
+          `;
+        }
+
+        if (msg.isBrokenBuild && msg.brokenData) {
+          alertHtml = `
+            <div class="build-alert-card broken">
+              <div class="card-header">
+                <span class="card-title" style="color: #ff6b81;">Compilation Failure: ${msg.brokenData.pr}</span>
+                <span class="msg-badge" style="background: rgba(255,71,87,0.2); color: #ff6b81;">BROKEN BUILD</span>
+              </div>
+              <div style="font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; color: #ff8c42; margin: 6px 0;">
+                ${msg.brokenData.error}
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <button class="btn btn-danger btn-sm" onclick="showToast('Fast Revert Command Triggered!')">⏪ Trigger Fast Revert</button>
+                <button class="btn btn-sm" onclick="showToast('PR Logs Exported')">📄 View Compilation Logs</button>
+              </div>
+            </div>
+          `;
+        }
+
+        if (msg.isBug && msg.bugData) {
+          alertHtml = `
+            <div class="bug-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 800; font-size: 0.95rem; color: #ff6b81;">${msg.bugData.id}: ${msg.bugData.title}</span>
+                <span class="msg-badge" style="background: rgba(255,71,87,0.2); color: #ff6b81;">${msg.bugData.severity}</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 8px;">
+                Build: <b>${msg.bugData.build}</b> | Reporter: <b>${msg.bugData.reporter}</b> | Log: <code style="color: var(--accent2);">${msg.bugData.logFile}</code>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="showToast('Log file downloaded!')">📥 Download ${msg.bugData.logFile}</button>
+                <button class="btn btn-sm" onclick="showToast('Assigned bug to Lead C++ Dev')">👤 Assign Dev</button>
+              </div>
+            </div>
+          `;
+        }
+
         const reactionsHtml = Object.entries(msg.reactions || {}).map(([emoji, count]) => `
           <div class="reaction-pill" onclick="toggleReaction('${msg.id}', '${emoji}')">
             <span>${emoji}</span> <span>${count}</span>
           </div>
         `).join('');
 
-        const attachmentsHtml = (msg.attachments || []).map(att => `
-          <div class="attachment-chip">📎 ${att}</div>
-        `).join('');
-
-        let leadHtml = '';
-        if (msg.isLead && msg.leadData) {
-          leadHtml = `
-            <div class="lead-card">
-              <div class="lead-header">
-                <span class="lead-title">${msg.leadData.title}</span>
-                <span class="lead-platform">${msg.leadData.platform}</span>
-              </div>
-              <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 8px;">
-                Contact: <b style="color: #fff;">${msg.leadData.contact}</b> | Intent Score: <b style="color: var(--accent2);">${msg.leadData.intentScore}</b>
-              </div>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary btn-sm" onclick="showToast('Lead contact details exported!')">Direct Outreach</button>
-                <button class="btn btn-sm" onclick="showToast('Assigned to Sarah Miller')">Assign Rep</button>
-              </div>
-            </div>
-          `;
-        }
-
         return `
           <div class="msg-group" id="msg-${msg.id}">
             <div class="msg-hover-tools">
               <button class="tool-btn" onclick="toggleReaction('${msg.id}', '👍')">👍</button>
-              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '❤️')">❤️</button>
               <button class="tool-btn" onclick="toggleReaction('${msg.id}', '🚀')">🚀</button>
-              <button class="tool-btn" onclick="openThread('${msg.id}')" title="Reply in Thread">💬</button>
+              <button class="tool-btn" onclick="openThread('${msg.id}')">💬</button>
             </div>
 
             <div class="msg-avatar">${msg.author[0]}</div>
@@ -1128,8 +1166,7 @@
                 <span class="msg-time">${msg.time}</span>
               </div>
               <div class="msg-text">${msg.text}</div>
-              ${leadHtml}
-              ${attachmentsHtml ? `<div class="msg-attachments">${attachmentsHtml}</div>` : ''}
+              ${alertHtml}
               ${reactionsHtml ? `<div class="reactions-bar">${reactionsHtml}</div>` : ''}
               ${msg.repliesCount > 0 ? `
                 <div class="thread-link-bar" onclick="openThread('${msg.id}')">
@@ -1144,20 +1181,17 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Channel Switching
-    function switchChannel(channelId, name, desc) {
-      state.currentChannelId = channelId;
+    function switchChannel(id, name, desc) {
+      state.currentChannelId = id;
       document.getElementById('currentChannelName').innerText = name;
       document.getElementById('currentChannelDesc').innerText = desc;
       document.getElementById('messageInput').placeholder = `Message ${name}...`;
 
       document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
       event.currentTarget.classList.add('active');
-
       renderMessages();
     }
 
-    // Send New Message
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const text = input.value.trim();
@@ -1166,24 +1200,20 @@
       const newMsg = {
         id: 'msg_' + Date.now(),
         author: 'Danila Viier',
-        badge: 'YOU',
+        badge: 'LEAD DEV',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: text,
+        text,
         reactions: {},
         repliesCount: 0
       };
 
-      if (!state.messages[state.currentChannelId]) {
-        state.messages[state.currentChannelId] = [];
-      }
+      if (!state.messages[state.currentChannelId]) state.messages[state.currentChannelId] = [];
       state.messages[state.currentChannelId].push(newMsg);
       input.value = '';
-
       renderMessages();
-      showToast('Message sent to ' + state.channels[state.currentChannelId]?.name);
+      showToast('Message posted to ' + state.channels[state.currentChannelId]?.name);
     }
 
-    // Reactions Toggle
     function toggleReaction(msgId, emoji) {
       const msgs = state.messages[state.currentChannelId] || [];
       const msg = msgs.find(m => m.id === msgId);
@@ -1194,176 +1224,140 @@
       }
     }
 
-    // Thread Panels
     function openThread(msgId) {
       state.activeThreadMsgId = msgId;
       document.getElementById('threadPanel').classList.add('open');
       renderThreadReplies();
     }
-
     function closeThread() {
       state.activeThreadMsgId = null;
       document.getElementById('threadPanel').classList.remove('open');
     }
-
     function renderThreadReplies() {
       const container = document.getElementById('threadStream');
       const replies = state.threads[state.activeThreadMsgId] || [];
-
       if (replies.length === 0) {
-        container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-dim);">No replies yet. Be the first to reply!</div>';
+        container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-dim);">No replies yet.</div>';
         return;
       }
-
       container.innerHTML = replies.map(r => `
         <div style="margin-bottom: 12px; background: var(--surface2); padding: 8px 12px; border-radius: 8px;">
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 2px;">${r.author} • <span style="color: var(--text-dim); font-size: 0.7rem;">${r.time}</span></div>
-          <div style="font-size: 0.85rem;">${r.text}</div>
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent);">${r.author} • ${r.time}</div>
+          <div style="font-size: 0.85rem; margin-top: 2px;">${r.text}</div>
         </div>
       `).join('');
     }
-
     function sendThreadReply() {
       const input = document.getElementById('threadInput');
       const text = input.value.trim();
       if (!text || !state.activeThreadMsgId) return;
-
-      if (!state.threads[state.activeThreadMsgId]) {
-        state.threads[state.activeThreadMsgId] = [];
-      }
-
+      if (!state.threads[state.activeThreadMsgId]) state.threads[state.activeThreadMsgId] = [];
       state.threads[state.activeThreadMsgId].push({
         author: 'Danila Viier',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: text
+        text
       });
-
-      // Update reply count on parent
-      const msgs = state.messages[state.currentChannelId] || [];
-      const parent = msgs.find(m => m.id === state.activeThreadMsgId);
-      if (parent) parent.repliesCount = (parent.repliesCount || 0) + 1;
-
       input.value = '';
       renderThreadReplies();
       renderMessages();
       showToast('Thread reply added');
     }
 
-    // Formatting Toolbar Helpers
+    // Trigger Automated UE5 Packaging Alert
+    function triggerUE5Build() {
+      showToast('🎮 Triggering UE5 Win64 Packaging Incredibuild pipeline...');
+      setTimeout(() => {
+        const newBuildMsg = {
+          id: 'build_' + Date.now(),
+          author: 'UE5 CI/CD Packaging Bot',
+          badge: 'AUTOMATED BUILD 📦',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: '🎮 **NEW UNREAL ENGINE 5.4.2 WIN64 STANDALONE BUILD READY**',
+          isBuildAlert: true,
+          buildData: {
+            version: 'v5.4.2-Win64-B' + Math.floor(1000 + Math.random() * 9000),
+            status: '🟢 PASS / PACKAGED',
+            arch: 'Windows Standalone (DX12 / Lumen / Nanite)',
+            duration: '17 min 10 sec (Incredibuild 32 Nodes)',
+            s3Url: 'https://s3.amazonaws.com/ue5-studio-builds/Latest_Win64_Build.zip',
+            changelog: [
+              'a9821c: Fixed Lumen GI light leaking in subterranean dungeons',
+              'f4410e: Optimized Nanite mesh LOD streaming memory'
+            ]
+          },
+          reactions: { '🚀': 5 },
+          repliesCount: 0
+        };
+
+        if (!state.messages['builds-playtest']) state.messages['builds-playtest'] = [];
+        state.messages['builds-playtest'].unshift(newBuildMsg);
+        if (state.currentChannelId === 'builds-playtest') renderMessages();
+        showToast('✨ Automated UE5 Build Alert pushed to #builds-playtest!');
+      }, 700);
+    }
+
+    // Playtest Bug Modal
+    function openPlaytestModal() {
+      document.getElementById('playtestModal').classList.add('active');
+    }
+    function closePlaytestModal() {
+      document.getElementById('playtestModal').classList.remove('active');
+    }
+    function submitPlaytestReport() {
+      const title = document.getElementById('bugTitleInput').value.trim();
+      const severity = document.getElementById('bugSeverityInput').value;
+      const desc = document.getElementById('bugDescInput').value.trim();
+      const logFile = document.getElementById('bugLogFileInput').value.trim();
+
+      if (!title) return;
+
+      const bugId = 'BUG-2026-' + Math.floor(1000 + Math.random() * 9000);
+      const bugMsg = {
+        id: 'bug_' + Date.now(),
+        author: 'Danila Viier',
+        badge: 'PLAYTESTER 🎮',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: `🚨 **NEW PLAYTEST BUG REPORT SUBMITTED [${bugId}]**`,
+        isBug: true,
+        bugData: {
+          id: bugId,
+          title,
+          severity: severity === 'BLOCKER' ? '🔴 BLOCKER' : severity === 'HIGH' ? '🟧 HIGH' : '🟦 MEDIUM',
+          build: 'v5.4.2-Win64-B1492',
+          reporter: 'Danila Viier',
+          logFile: logFile || 'UnrealEngine.log'
+        },
+        reactions: { '🚨': 1 },
+        repliesCount: 0
+      };
+
+      if (!state.messages['bugs']) state.messages['bugs'] = [];
+      state.messages['bugs'].unshift(bugMsg);
+      closePlaytestModal();
+      switchChannel('bugs', '🐛 #bugs', 'Tracked playtest bug reports, logs, and stack trace dumps');
+      showToast('🚀 Playtest Bug ' + bugId + ' logged to #bugs!');
+    }
+
+    function attachLogFile() {
+      const fileName = prompt('Attach Unreal log file:', 'UnrealEngine_Playtest_Crash.log');
+      if (fileName) {
+        document.getElementById('messageInput').value += ` [Attached Log: ${fileName}]`;
+        showToast('Attached log file ' + fileName);
+      }
+    }
+
     function insertFormatting(type) {
       const textarea = document.getElementById('messageInput');
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const selected = textarea.value.substring(start, end) || 'text';
-
       let formatted = selected;
       if (type === 'bold') formatted = `**${selected}**`;
       if (type === 'italic') formatted = `_${selected}_`;
       if (type === 'code') formatted = `\`${selected}\``;
-      if (type === 'link') formatted = `[${selected}](https://)`;
-
       textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
     }
 
-    function insertEmoji(emoji) {
-      const textarea = document.getElementById('messageInput');
-      textarea.value += ' ' + emoji;
-    }
-
-    function attachFile() {
-      const fileName = prompt('Enter filename to attach:', 'project_spec_2026.pdf');
-      if (fileName) {
-        const textarea = document.getElementById('messageInput');
-        textarea.value += ` [File: ${fileName}]`;
-        showToast('Attached ' + fileName);
-      }
-    }
-
-    // Lead Fetch & Export
-    function triggerLeadFetch() {
-      showToast('🔄 Fetching live European client leads across 20+ platforms...');
-      setTimeout(() => {
-        const newLead = {
-          id: 'lead_' + Date.now(),
-          author: 'Parser Engine Bot',
-          badge: 'AI BOT ⚡',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: '🎯 **NEW LIVE LEAD — GERMAN E-COMMERCE INTEGRATION**',
-          isLead: true,
-          leadData: {
-            title: 'Wants automated inventory parser for 15,000 product SKUs',
-            platform: 'Kleinanzeigen / Substack',
-            contact: 'dev-team@berlin-tech.de',
-            intentScore: '99%'
-          },
-          reactions: { '🚀': 3 },
-          repliesCount: 0
-        };
-
-        if (!state.messages['leads-and-sales']) state.messages['leads-and-sales'] = [];
-        state.messages['leads-and-sales'].unshift(newLead);
-        if (state.currentChannelId === 'leads-and-sales') renderMessages();
-        showToast('✨ New high-intent lead pushed to #leads-and-sales!');
-      }, 800);
-    }
-
-    function exportChannelHistory() {
-      const logData = JSON.stringify(state.messages[state.currentChannelId] || [], null, 2);
-      const blob = new Blob([logData], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `slack_channel_${state.currentChannelId}_export.json`;
-      a.click();
-      showToast('Channel log exported as JSON file!');
-    }
-
-    // Modals & 2FA Auth logic
-    function openAuthModal() {
-      document.getElementById('authModal').classList.add('active');
-    }
-    function closeAuthModal() {
-      document.getElementById('authModal').classList.remove('active');
-    }
-    function proceedTo2FA() {
-      document.getElementById('authStep1').style.display = 'none';
-      document.getElementById('authStep2').style.display = 'block';
-    }
-    function verify2FA() {
-      const pin = document.getElementById('pinInput').value.trim();
-      if (pin === '994-827') {
-        document.getElementById('authStep2').style.display = 'none';
-        document.getElementById('authProfile').style.display = 'block';
-        document.getElementById('userStatusText').innerText = 'Admin (2FA Verified)';
-        showToast('🔓 2FA Verification Success! Admin access granted.');
-      } else {
-        showToast('❌ Invalid 2FA PIN. Enter 994-827');
-      }
-    }
-    function saveProfileBio() {
-      showToast('Profile bio updated successfully!');
-      closeAuthModal();
-    }
-
-    function openCreateChannelModal() {
-      document.getElementById('createChannelModal').classList.add('active');
-    }
-    function closeCreateChannelModal() {
-      document.getElementById('createChannelModal').classList.remove('active');
-    }
-    function createNewChannel() {
-      const name = document.getElementById('newChannelName').value.trim().toLowerCase().replace(/\s+/g, '-');
-      const desc = document.getElementById('newChannelDesc').value.trim() || 'Custom channel';
-      if (!name) return;
-
-      state.channels[name] = { name: '#' + name, desc: desc };
-      state.messages[name] = [];
-
-      closeCreateChannelModal();
-      switchChannel(name, '#' + name, desc);
-      showToast('Created channel #' + name);
-    }
-
-    // Toast Notification System
     function showToast(msg) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
