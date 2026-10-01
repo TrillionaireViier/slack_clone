@@ -936,10 +936,7 @@
       <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">🎯 Trello & Jira Board</button>
       <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
-      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
-      <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
       <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
-      <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">🎮 Package UE5</button>
     </div>
   </div>
 
@@ -1234,104 +1231,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 4: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
-  <div class="modal-overlay" id="userAuthModal">
-    <div class="modal-card">
-      <div class="modal-title">🔑 User Account Authentication</div>
-      <div class="modal-subtitle">Sign in or register a new team member account for Unreal Engine Studio Slack.</div>
 
-      <div class="modal-tabs">
-        <button class="modal-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signIn')">Sign In</button>
-        <button class="modal-tab-btn" id="tabSignUp" onclick="switchAuthTab('signUp')">Create Account (Sign Up)</button>
-      </div>
-
-      <div id="authFormSignIn">
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-input" id="userLoginEmail" value="danila@gamestudio.internal" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="userLoginPass" value="StudioPass2026!" />
-        </div>
-        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
-      </div>
-
-      <div id="authFormSignUp" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input type="text" class="form-input" id="signUpName" placeholder="e.g. Marcus Vance" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Studio Role Title</label>
-          <input type="text" class="form-input" id="signUpRole" placeholder="e.g. Senior Technical Artist / QA Engineer" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input type="email" class="form-input" id="signUpEmail" placeholder="m.vance@gamestudio.internal" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="signUpPass" placeholder="••••••••••••" />
-        </div>
-        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignUp()">Register Account ✨</button>
-      </div>
-
-      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeUserAuthModal()">Close</button>
-    </div>
-  </div>
-
-  <!-- ── MODAL 5: SEPARATE DEDICATED ADMIN PANEL MODAL (LOCKED BY DEFAULT) ── -->
-  <div class="modal-overlay" id="adminModal">
-    <div class="modal-card">
-      <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
-      <div class="modal-subtitle">Hardened admin management panel. Password entry required to unlock.</div>
-
-      <!-- Step 1: Admin Password (EMPTY DEFAULT, REQUIRES PASSWORD FIRST) -->
-      <div id="adminStep1">
-        <div class="form-group">
-          <label class="form-label">Superuser Email</label>
-          <input type="email" class="form-input" id="adminEmail" value="admin@parserforall.app" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Superuser Password Required</label>
-          <input type="password" class="form-input" id="adminPassword" placeholder="Enter Superuser Password..." />
-        </div>
-        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="proceedAdmin2FA()">Unlock Admin Panel →</button>
-      </div>
-
-      <!-- Step 2: 2FA Verification -->
-      <div id="adminStep2" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Enter 2FA Security Code (Hint: 994-827)</label>
-          <input type="text" class="form-input" id="adminPinInput" placeholder="000-000" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; font-weight: 800;" />
-        </div>
-        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="verifyAdmin2FA()">Authorize Superuser Session 🔒</button>
-      </div>
-
-      <!-- Step 3: Admin Bio & Controls -->
-      <div id="adminProfileStep" style="display: none;">
-        <div style="background: rgba(255,140,66,0.1); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
-          <div style="font-weight: 800; color: var(--warning);">ADMIN опис профиля</div>
-          <p style="font-size: 0.82rem; margin-top: 4px; color: var(--text);">Superuser profile active. 3-thread REST scraper & UE5 Incredibuild pipeline controls authorized.</p>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Admin Profile Description (опис профиля)</label>
-          <textarea class="form-input" id="adminBioInput" rows="3">Head of Infrastructure & Real-Time European Data Stream Architecture.</textarea>
-        </div>
-
-        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-          <button class="btn btn-admin btn-sm" onclick="showToast('⚡ Incredibuild Cluster Worker Nodes Resynchronized!')">Reset Build Workers</button>
-          <button class="btn btn-danger btn-sm" onclick="showToast('🧹 Webhook Event Logs Cleared')">Clear Log Cache</button>
-        </div>
-
-        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveAdminBio()">Save Admin Bio & Close</button>
-      </div>
-
-      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeAdminModal()">Close Admin Panel</button>
-    </div>
-  </div>
 
   <!-- ── MODAL 6: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
   <div class="modal-overlay" id="playtestModal">
@@ -2058,114 +1958,9 @@
       showToast('Thread reply added');
     }
 
-    // Trigger Automated UE5 Packaging Alert
-    function triggerUE5Build() {
-      showToast('🎮 Triggering UE5 Win64 Packaging Incredibuild pipeline...');
-      setTimeout(() => {
-        const newBuildMsg = {
-          id: 'build_' + Date.now(),
-          author: 'UE5 CI/CD Packaging Bot',
-          badge: 'AUTOMATED BUILD 📦',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: '🎮 **NEW UNREAL ENGINE 5.4.2 WIN64 STANDALONE BUILD READY**',
-          isBuildAlert: true,
-          buildData: {
-            version: 'v5.4.2-Win64-B' + Math.floor(1000 + Math.random() * 9000),
-            status: '🟢 PASS / PACKAGED',
-            arch: 'Windows Standalone (DX12 / Lumen / Nanite)',
-            duration: '17 min 10 sec (Incredibuild 32 Nodes)',
-            s3Url: 'https://s3.amazonaws.com/ue5-studio-builds/Latest_Win64_Build.zip',
-            changelog: [
-              'a9821c: Fixed Lumen GI light leaking in subterranean dungeons',
-              'f4410e: Optimized Nanite mesh LOD streaming memory'
-            ]
-          },
-          reactions: { '🚀': 5 },
-          repliesCount: 0
-        };
-
-        if (!state.messages['builds-playtest']) state.messages['builds-playtest'] = [];
-        state.messages['builds-playtest'].unshift(newBuildMsg);
-        if (state.currentChannelId === 'builds-playtest') renderMessages();
-        showToast('✨ Automated UE5 Build Alert pushed to #builds-playtest!');
-      }, 700);
-    }
-
     // Settings Modal
     function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
-
-    // User Auth Modal
-    function openUserAuthModal() { document.getElementById('userAuthModal').classList.add('active'); }
-    function closeUserAuthModal() { document.getElementById('userAuthModal').classList.remove('active'); }
-    function switchAuthTab(tab) {
-      if (tab === 'signIn') {
-        document.getElementById('tabSignIn').classList.add('active');
-        document.getElementById('tabSignUp').classList.remove('active');
-        document.getElementById('authFormSignIn').style.display = 'block';
-        document.getElementById('authFormSignUp').style.display = 'none';
-      } else {
-        document.getElementById('tabSignUp').classList.add('active');
-        document.getElementById('tabSignIn').classList.remove('active');
-        document.getElementById('authFormSignIn').style.display = 'none';
-        document.getElementById('authFormSignUp').style.display = 'block';
-      }
-    }
-    function performUserSignIn() {
-      const email = document.getElementById('userLoginEmail').value.trim();
-      state.currentUser = {
-        name: email.split('@')[0],
-        role: 'Engineering Lead',
-        badge: 'DEV USER'
-      };
-      document.getElementById('userStatusText').innerText = `${state.currentUser.name} (Online)`;
-      closeUserAuthModal();
-      showToast(`Welcome back, ${state.currentUser.name}! Session authenticated.`);
-    }
-    function performUserSignUp() {
-      const name = document.getElementById('signUpName').value.trim() || 'New Developer';
-      const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
-      state.currentUser = { name, role, badge: role.toUpperCase() };
-      document.getElementById('userStatusText').innerText = `${name} (${role})`;
-      closeUserAuthModal();
-      showToast(`🎉 Account created! Signed in as ${name}.`);
-    }
-
-    // Admin Modal (REQUIRE PASSWORD FIRST BEFORE UNLOCKING)
-    function openAdminModal() {
-      // Reset fields to ensure password is required first
-      document.getElementById('adminPassword').value = '';
-      document.getElementById('adminPinInput').value = '';
-      document.getElementById('adminStep1').style.display = 'block';
-      document.getElementById('adminStep2').style.display = 'none';
-      document.getElementById('adminProfileStep').style.display = 'none';
-      document.getElementById('adminModal').classList.add('active');
-    }
-    function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
-    function proceedAdmin2FA() {
-      const pass = document.getElementById('adminPassword').value.trim();
-      if (pass === 'P4A-Admin#2026!SecuredSuperUser') {
-        document.getElementById('adminStep1').style.display = 'none';
-        document.getElementById('adminStep2').style.display = 'block';
-        showToast('🔑 Password verified. Enter 2FA security code.');
-      } else {
-        showToast('❌ Incorrect password. Access denied.');
-      }
-    }
-    function verifyAdmin2FA() {
-      const pin = document.getElementById('adminPinInput').value.trim();
-      if (pin === '994-827') {
-        document.getElementById('adminStep2').style.display = 'none';
-        document.getElementById('adminProfileStep').style.display = 'block';
-        showToast('🔓 2FA Verification Success! Admin Dashboard Unlocked.');
-      } else {
-        showToast('❌ Invalid 2FA PIN. Enter 994-827');
-      }
-    }
-    function saveAdminBio() {
-      showToast('Admin Bio (ADMIN опис профиля) saved successfully!');
-      closeAdminModal();
-    }
 
     // Playtest Bug Modal
     function openPlaytestModal() { document.getElementById('playtestModal').classList.add('active'); }
