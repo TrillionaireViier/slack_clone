@@ -936,6 +936,8 @@
       <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">🎯 Trello & Jira Board</button>
       <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
+      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
+      <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
       <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
     </div>
   </div>
@@ -1001,6 +1003,18 @@
           </div>
           <div class="channel-item" id="item-dm-alex" onclick="switchChannel('dm-alex', '💬 Alex Rivera (Physics Dev)', 'Unreal C++ locomotion & PhysX collision chat')">
             <span class="dm-status-dot online"></span> <span>Alex Rivera</span>
+          </div>
+          <div class="channel-item" id="item-dm-marcus" onclick="switchChannel('dm-marcus', '💬 Marcus Vance (Senior Graphics Dev)', 'Direct chat regarding Nanite mesh streaming & Vulkan/DX12 RHI')">
+            <span class="dm-status-dot online"></span> <span>Marcus Vance</span>
+          </div>
+          <div class="channel-item" id="item-dm-sophia" onclick="switchChannel('dm-sophia', '💬 Sophia Chen (Shaders & VFX Lead)', 'Direct chat regarding Niagara particle systems & HLSL shaders')">
+            <span class="dm-status-dot online"></span> <span>Sophia Chen</span>
+          </div>
+          <div class="channel-item" id="item-dm-dmitry" onclick="switchChannel('dm-dmitry', '💬 Dmitry Sokolov (Engine Core Systems)', 'Direct chat regarding C++ memory allocator & multi-threading')">
+            <span class="dm-status-dot online"></span> <span>Dmitry Sokolov</span>
+          </div>
+          <div class="channel-item" id="item-dm-elena" onclick="switchChannel('dm-elena', '💬 Elena Rostova (Lead Technical Artist)', 'Direct chat regarding 3D rigging, materials & PBR texture pipelines')">
+            <span class="dm-status-dot online"></span> <span>Elena Rostova</span>
           </div>
         </div>
 
@@ -1231,6 +1245,105 @@
     </div>
   </div>
 
+  <!-- ── MODAL 4: USER AUTHENTICATION MODAL (WITH PASSWORD PROTECTION) ── -->
+  <div class="modal-overlay" id="userAuthModal">
+    <div class="modal-card">
+      <div class="modal-title">🔑 User Account Authentication</div>
+      <div class="modal-subtitle">Sign in or register a developer profile for Unreal Engine Studio workspace.</div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signIn')">Sign In</button>
+        <button class="modal-tab-btn" id="tabSignUp" onclick="switchAuthTab('signUp')">Create Account (Sign Up)</button>
+      </div>
+
+      <div id="authFormSignIn">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="userLoginEmail" value="danila@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password Required</label>
+          <input type="password" class="form-input" id="userLoginPass" value="UserPass2026!" placeholder="Enter User Password..." />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In & Authenticate 🚀</button>
+      </div>
+
+      <div id="authFormSignUp" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="signUpName" placeholder="e.g. Marcus Vance" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Studio Role Title</label>
+          <input type="text" class="form-input" id="signUpRole" placeholder="e.g. Graphics Engineer" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="signUpEmail" placeholder="m.vance@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signUpPass" placeholder="Create strong password..." />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignUp()">Register Account ✨</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeUserAuthModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 5: DEDICATED ADMIN PANEL MODAL (STRICT PASSWORD & 2FA LOCKED) ── -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-card">
+      <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
+      <div class="modal-subtitle">Hardened admin management panel. Password entry required to unlock.</div>
+
+      <!-- Step 1: Admin Password -->
+      <div id="adminStep1">
+        <div class="form-group">
+          <label class="form-label">Superuser Email</label>
+          <input type="email" class="form-input" id="adminEmail" value="admin@parserforall.app" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Superuser Password Required</label>
+          <input type="password" class="form-input" id="adminPassword" placeholder="Enter Superuser Password..." />
+        </div>
+        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="proceedAdmin2FA()">Unlock Admin 2FA Step →</button>
+      </div>
+
+      <!-- Step 2: 2FA Verification -->
+      <div id="adminStep2" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Enter 2FA Security Code (Hint: 994-827)</label>
+          <input type="text" class="form-input" id="adminPinInput" placeholder="000-000" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; font-weight: 800;" />
+        </div>
+        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="verifyAdmin2FA()">Authorize Superuser Session 🔒</button>
+      </div>
+
+      <!-- Step 3: Admin Bio & Controls -->
+      <div id="adminProfileStep" style="display: none;">
+        <div style="background: rgba(255,140,66,0.1); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
+          <div style="font-weight: 800; color: var(--warning);">ADMIN опис профиля</div>
+          <p style="font-size: 0.82rem; margin-top: 4px; color: var(--text);">Superuser profile active. Scraper & build pipeline controls authorized.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Profile Description (опис профиля)</label>
+          <textarea class="form-input" id="adminBioInput" rows="3">Lead Architect & Superuser Administrator of Unreal Engine workspace.</textarea>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button class="btn btn-admin btn-sm" onclick="showToast('⚡ Incredibuild Cluster Worker Nodes Resynchronized!')">Reset Build Workers</button>
+          <button class="btn btn-danger btn-sm" onclick="showToast('🧹 Webhook Event Logs Cleared')">Clear Log Cache</button>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveAdminBio()">Save Admin Bio & Close</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeAdminModal()">Close Admin Panel</button>
+    </div>
+  </div>
+
 
 
   <!-- ── MODAL 6: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
@@ -1310,7 +1423,11 @@
         'art-assets': { name: '🎨 #art-assets', desc: 'Nanite 3D meshes, Lumen lighting & sound assets' },
         'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' },
         'dm-danila': { name: '💬 Danila Viier', desc: 'Direct message thread with Danila Viier (Lead Architect)' },
-        'dm-alex': { name: '💬 Alex Rivera', desc: 'Direct message thread with Alex Rivera (Physics Dev)' }
+        'dm-alex': { name: '💬 Alex Rivera', desc: 'Direct message thread with Alex Rivera (Physics Dev)' },
+        'dm-marcus': { name: '💬 Marcus Vance', desc: 'Direct message thread with Marcus Vance (Senior Graphics Dev)' },
+        'dm-sophia': { name: '💬 Sophia Chen', desc: 'Direct message thread with Sophia Chen (Shaders & VFX Lead)' },
+        'dm-dmitry': { name: '💬 Dmitry Sokolov', desc: 'Direct message thread with Dmitry Sokolov (Engine Core Systems)' },
+        'dm-elena': { name: '💬 Elena Rostova', desc: 'Direct message thread with Elena Rostova (Lead Technical Artist)' }
       },
       messages: {
         'announcements': [
@@ -1464,6 +1581,50 @@
             reactions: { '🚀': 1 },
             repliesCount: 0
           }
+        ],
+        'dm-marcus': [
+          {
+            id: 'm_dm_m1',
+            author: 'Marcus Vance',
+            badge: 'GRAPHICS DEV 🎨',
+            time: '09:30 AM',
+            text: 'Nanite mesh LOD streaming for the subterranean cave environment is optimized for DX12 Agility SDK!',
+            reactions: { '⚡': 4 },
+            repliesCount: 0
+          }
+        ],
+        'dm-sophia': [
+          {
+            id: 'm_dm_s1',
+            author: 'Sophia Chen',
+            badge: 'VFX LEAD ✨',
+            time: '09:42 AM',
+            text: 'Niagara GPU particle emitters for magic spell occlusion are compiled and attached to P4 CL #49285.',
+            reactions: { '🔥': 5 },
+            repliesCount: 0
+          }
+        ],
+        'dm-dmitry': [
+          {
+            id: 'm_dm_d1',
+            author: 'Dmitry Sokolov',
+            badge: 'ENGINE CORE ⚙️',
+            time: '10:05 AM',
+            text: 'C++ custom Mimalloc thread pool allocator decreased frame time to 16.6ms on Win64 target build.',
+            reactions: { '💻': 6 },
+            repliesCount: 0
+          }
+        ],
+        'dm-elena': [
+          {
+            id: 'm_dm_e1',
+            author: 'Elena Rostova',
+            badge: 'TECHNICAL ARTIST 🎨',
+            time: '10:20 AM',
+            text: 'Substance PBR 8K texture maps and skeletal mesh rigs are synced to #art-assets.',
+            reactions: { '🎨': 7 },
+            repliesCount: 0
+          }
         ]
       },
       threads: {
@@ -1604,9 +1765,10 @@
         return `
           <div class="msg-group" id="msg-${msg.id}">
             <div class="msg-hover-tools">
-              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '👍')">👍</button>
-              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '🚀')">🚀</button>
-              <button class="tool-btn" onclick="openThread('${msg.id}')">💬</button>
+              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '👍')" title="Add Reaction">👍</button>
+              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '🚀')" title="Add Reaction">🚀</button>
+              <button class="tool-btn" onclick="openThread('${msg.id}')" title="Reply in Thread">💬</button>
+              <button class="tool-btn danger" onclick="deleteMessage('${msg.id}')" title="Delete Message">🗑️</button>
             </div>
 
             <div class="msg-avatar">${msg.author[0]}</div>
@@ -1928,6 +2090,28 @@
       state.activeThreadMsgId = null;
       document.getElementById('threadPanel').classList.remove('open');
     }
+    function deleteMessage(msgId) {
+      const channelMsgs = state.messages[state.currentChannelId];
+      if (channelMsgs) {
+        state.messages[state.currentChannelId] = channelMsgs.filter(m => m.id !== msgId);
+        renderMessages();
+        showToast('🗑️ Message deleted');
+      }
+    }
+
+    function deleteThreadReply(index) {
+      if (state.activeThreadMsgId && state.threads[state.activeThreadMsgId]) {
+        state.threads[state.activeThreadMsgId].splice(index, 1);
+        const parentMsg = (state.messages[state.currentChannelId] || []).find(m => m.id === state.activeThreadMsgId);
+        if (parentMsg && parentMsg.repliesCount > 0) {
+          parentMsg.repliesCount = Math.max(0, parentMsg.repliesCount - 1);
+        }
+        renderThreadReplies();
+        renderMessages();
+        showToast('🗑️ Thread reply deleted');
+      }
+    }
+
     function renderThreadReplies() {
       const container = document.getElementById('threadStream');
       const replies = state.threads[state.activeThreadMsgId] || [];
@@ -1935,10 +2119,13 @@
         container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-dim);">No replies yet.</div>';
         return;
       }
-      container.innerHTML = replies.map(r => `
-        <div style="margin-bottom: 12px; background: var(--surface2); padding: 8px 12px; border-radius: 8px;">
-          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent);">${r.author} • ${r.time}</div>
-          <div style="font-size: 0.85rem; margin-top: 2px;">${r.text}</div>
+      container.innerHTML = replies.map((r, idx) => `
+        <div style="margin-bottom: 12px; background: var(--surface2); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent);">${r.author} • ${r.time}</div>
+            <div style="font-size: 0.85rem; margin-top: 2px;">${r.text}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="deleteThreadReply(${idx})" title="Delete Reply">🗑️</button>
         </div>
       `).join('');
     }
