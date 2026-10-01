@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slack Clone — Premium Workspace & Real-Time Client Leads Engine</title>
+  <meta name="description" content="A feature-complete, modern Slack Clone web application featuring live channels, thread replies, emoji reactions, instant direct messaging, lead engine bot, user auth, and admin controls." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #0f0d1b;
+      --sidebar-bg: #161327;
+      --sidebar-hover: rgba(255, 255, 255, 0.06);
+      --sidebar-active: #7c5cff;
+      --channel-bg: #1d1a34;
+      --chat-bg: #121022;
+      --surface: #1e1b36;
+      --surface2: #282449;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-bright: rgba(124, 92, 255, 0.35);
+      --text: #e8e8f0;
+      --text-dim: #9999b3;
+      --accent: #7c5cff;
+      --accent2: #00d4aa;
+      --warning: #ff8c42;
+      --danger: #ff4757;
+      --gradient: linear-gradient(135deg, #7c5cff 0%, #00d4aa 100%);
+      --gradient-hover: linear-gradient(135deg, #6c4cee 0%, #00b894 100%);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top Navigation Bar ── */
+    .top-nav {
+      height: 48px;
+      background: #0d0b18;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      user-select: none;
+    }
+    .top-nav-center {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 20px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px 6px 36px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .top-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 8px var(--accent2);
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background: var(--surface);
+      border-color: var(--accent);
+    }
+    .btn-primary {
+      background: var(--gradient);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(124, 92, 255, 0.3);
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+
+    /* ── Main Slack Workspace Layout ── */
+    .slack-app {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Workspace Rail (Leftmost) */
+    .workspace-rail {
+      width: 64px;
+      background: #0a0814;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 12px;
+      z-index: 10;
+    }
+    .workspace-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+      position: relative;
+    }
+    .workspace-icon:hover {
+      border-radius: 10px;
+      border-color: var(--accent);
+    }
+    .workspace-icon.active {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 14px rgba(124, 92, 255, 0.5);
+    }
+    .workspace-icon.active::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      width: 4px;
+      height: 24px;
+      background: #fff;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Sidebar Navigation (Channels & DMs) */
+    .channels-sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .sidebar-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-header h2 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-header .compose-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .sidebar-header .compose-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 8px;
+    }
+    .sidebar-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
+    .sidebar-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .sidebar-section-title .add-btn {
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .sidebar-section-title .add-btn:hover {
+      color: #fff;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .channel-item:hover {
+      background: var(--sidebar-hover);
+      color: var(--text);
+    }
+    .channel-item.active {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+    .channel-item .unread-pill {
+      margin-left: auto;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .dm-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #888;
+    }
+    .dm-status-dot.online {
+      background: var(--accent2);
+    }
+
+    /* ── Main Chat Area ── */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--chat-bg);
+      position: relative;
+    }
+
+    .chat-header {
+      height: 56px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(18, 16, 34, 0.9);
+      backdrop-filter: blur(10px);
+    }
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chat-header-info h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .chat-header-info p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* Message Stream */
+    .message-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .message-stream::-webkit-scrollbar {
+      width: 6px;
+    }
+    .message-stream::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+    }
+
+    .msg-group {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .msg-group:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .msg-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .msg-content {
+      flex: 1;
+    }
+    .msg-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .msg-author {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .msg-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(124, 92, 255, 0.2);
+      color: var(--accent2);
+      border: 1px solid rgba(124, 92, 255, 0.3);
+    }
+    .msg-time {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .msg-text {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #d8d8e5;
+    }
+    .msg-attachments {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .attachment-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent2);
+    }
+
+    /* Message Hover Toolbar */
+    .msg-hover-tools {
+      position: absolute;
+      right: 16px;
+      top: -12px;
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      padding: 2px 4px;
+      gap: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .msg-group:hover .msg-hover-tools {
+      display: flex;
+    }
+    .tool-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Reactions Bar */
+    .reactions-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .reaction-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+    .reaction-pill:hover, .reaction-pill.reacted {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.15);
+      color: #fff;
+    }
+
+    /* Thread Reply Bar */
+    .thread-link-bar {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .thread-link-bar:hover {
+      text-decoration: underline;
+    }
+
+    /* Message Composer */
+    .composer-wrapper {
+      padding: 16px 20px;
+      background: var(--chat-bg);
+      border-top: 1px solid var(--border);
+    }
+    .composer-box {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .composer-toolbar {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .composer-input {
+      width: 100%;
+      min-height: 54px;
+      max-height: 140px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 12px;
+      outline: none;
+      resize: none;
+    }
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+    }
+    .composer-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Right Thread Panel ── */
+    .thread-panel {
+      width: 320px;
+      background: var(--sidebar-bg);
+      border-left: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+    }
+    .thread-panel.open {
+      display: flex;
+    }
+    .thread-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .thread-header h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+    .close-thread-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    /* ── Modal System ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlide {
+      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .modal-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-dim);
+    }
+    .form-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2000;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--accent2);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      animation: toastIn 0.3s ease-out;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Special Lead Card in #leads-and-sales */
+    .lead-card {
+      background: rgba(0, 212, 170, 0.05);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 8px;
+    }
+    .lead-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .lead-title {
+      font-weight: 700;
+      color: var(--accent2);
+      font-size: 0.95rem;
+    }
+    .lead-platform {
+      background: var(--surface2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Top Navigation ── -->
+  <div class="top-nav">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 26px; height: 26px; background: var(--gradient); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem;">S</div>
+      <span style="font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em;">Slack Hub v4.2</span>
+    </div>
+
+    <div class="top-nav-center">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" placeholder="Search TrillionaireViier workspace, messages, or files... (Ctrl + K)" />
+    </div>
+
+    <div class="top-nav-right">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="userStatusText">Admin Online</span>
+      </div>
+      <button class="btn btn-sm" onclick="openAuthModal()">🔑 Auth / 2FA</button>
+      <button class="btn btn-primary btn-sm" onclick="openCreateChannelModal()">+ New Channel</button>
+    </div>
+  </div>
+
+  <!-- ── Main Slack Workspace Layout ── -->
+  <div class="slack-app">
+
+    <!-- Workspace Rail -->
+    <div class="workspace-rail">
+      <div class="workspace-icon active" title="TrillionaireViier Team">T</div>
+      <div class="workspace-icon" title="Parser Engine Bot Workspace">P</div>
+      <div class="workspace-icon" title="Wayly Explorer HQ">W</div>
+      <div style="margin-top: auto;" class="workspace-icon" onclick="openCreateChannelModal()" title="Add Workspace">+</div>
+    </div>
+
+    <!-- Channels & DMs Sidebar -->
+    <div class="channels-sidebar">
+      <div class="sidebar-header">
+        <div>
+          <h2 id="workspaceName">TrillionaireViier HQ</h2>
+          <div style="font-size: 0.72rem; color: var(--accent2); font-weight: 600;">● 24 Members Active</div>
+        </div>
+        <button class="compose-btn" title="New Message" onclick="openCreateChannelModal()">✏️</button>
+      </div>
+
+      <div class="sidebar-scroll">
+
+        <!-- Channels Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">
+            <span>Channels</span>
+            <span class="add-btn" onclick="openCreateChannelModal()">+</span>
+          </div>
+          <div class="channel-item active" onclick="switchChannel('general', '#general', 'General team discussion')">
+            <span>#</span> <span>general</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('leads-and-sales', '#leads-and-sales', 'Real-time European client leads engine feed')">
+            <span>#</span> <span>leads-and-sales</span>
+            <span class="unread-pill">14</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('dev-team', '#dev-team', 'Engineering & Architecture updates')">
+            <span>#</span> <span>dev-team</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('announcements', '#announcements', 'Official company announcements')">
+            <span>#</span> <span>announcements</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('design-system', '#design-system', 'UI/UX Glassmorphism components')">
+            <span>#</span> <span>design-system</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('random', '#random', 'Coffee break & non-work chatter')">
+            <span>#</span> <span>random</span>
+          </div>
+        </div>
+
+        <!-- Direct Messages Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">
+            <span>Direct Messages</span>
+            <span class="add-btn">+</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('dm-danila', '💬 Danila Viier (You)', 'Direct message thread')">
+            <span class="dm-status-dot online"></span> <span>Danila Viier</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('dm-bot', '⚡ Parser Engine Bot', 'AI Scraper Assistant Direct Stream')">
+            <span class="dm-status-dot online"></span> <span>Parser Bot AI</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('dm-elon', '💬 Elon Musk', 'SpaceX & X integration chat')">
+            <span class="dm-status-dot"></span> <span>Elon Musk</span>
+          </div>
+          <div class="channel-item" onclick="switchChannel('dm-sam', '💬 Sam Altman', 'OpenAI & LLM API partnership')">
+            <span class="dm-status-dot online"></span> <span>Sam Altman</span>
+          </div>
+        </div>
+
+        <!-- Apps Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">
+            <span>Apps & Integrations</span>
+          </div>
+          <div class="channel-item" onclick="showToast('⚡ Vercel Deployment Bot: All 3 Threads Live & Healthy!')">
+            <span>⚡</span> <span>Vercel Deployments</span>
+          </div>
+          <div class="channel-item" onclick="showToast('🤖 AI Assistant ready for NLP prompt queries.')">
+            <span>🤖</span> <span>AI Copilot</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Central Chat View -->
+    <div class="chat-area">
+
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <h3 id="currentChannelName">#general</h3>
+          <p id="currentChannelDesc">Company-wide announcements and general discussion</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-sm" onclick="exportChannelHistory()">📥 Export Log</button>
+          <button class="btn btn-sm" onclick="triggerLeadFetch()">🔄 Refresh Leads</button>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="message-stream" id="messageStream">
+        <!-- Messages rendered dynamically by JS -->
+      </div>
+
+      <!-- Message Composer -->
+      <div class="composer-wrapper">
+        <div class="composer-box">
+          <div class="composer-toolbar">
+            <button class="tool-btn" onclick="insertFormatting('bold')" title="Bold"><b>B</b></button>
+            <button class="tool-btn" onclick="insertFormatting('italic')" title="Italic"><i>I</i></button>
+            <button class="tool-btn" onclick="insertFormatting('code')" title="Code"><code>&lt;/&gt;</code></button>
+            <button class="tool-btn" onclick="insertFormatting('link')" title="Link">🔗</button>
+            <div style="margin-left: auto; display: flex; gap: 4px;">
+              <button class="tool-btn" onclick="attachFile()" title="Attach file">📎</button>
+              <button class="tool-btn" onclick="insertEmoji('🚀')" title="Quick Emoji">🚀</button>
+            </div>
+          </div>
+
+          <textarea class="composer-input" id="messageInput" placeholder="Message #general... (Press Enter to send, Shift+Enter for new line)"></textarea>
+
+          <div class="composer-footer">
+            <div style="font-size: 0.75rem; color: var(--text-dim);">
+              <span id="typingIndicator">⚡ 3-Thread Parser Bot online</span>
+            </div>
+            <div class="composer-actions">
+              <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send ✈️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Thread Replies Side Panel -->
+    <div class="thread-panel" id="threadPanel">
+      <div class="thread-header">
+        <h4>Thread Reply</h4>
+        <button class="close-thread-btn" onclick="closeThread()">✕</button>
+      </div>
+      <div class="message-stream" id="threadStream" style="padding: 14px;">
+        <!-- Thread messages rendered dynamically -->
+      </div>
+      <div class="composer-wrapper" style="padding: 10px; background: var(--sidebar-bg);">
+        <textarea class="composer-input" id="threadInput" placeholder="Reply to thread..." style="min-height: 42px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;"></textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top: 6px; width: 100%;" onclick="sendThreadReply()">Reply 💬</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Modals ── -->
+
+  <!-- Auth & 2FA Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card">
+      <div class="modal-title">Admin Account & 2FA Control</div>
+      <div class="modal-subtitle">Secure admin credentials & two-factor authentication panel.</div>
+
+      <div id="authStep1">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="loginEmail" value="admin@parserforall.app" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hardened Password</label>
+          <input type="password" class="form-input" id="loginPassword" value="P4A-Admin#2026!SecuredSuperUser" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="proceedTo2FA()">Verify & Proceed to 2FA PIN →</button>
+      </div>
+
+      <div id="authStep2" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Enter 2FA Verification PIN (Hint: 994-827)</label>
+          <input type="text" class="form-input" id="pinInput" placeholder="000-000" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; font-weight: 800;" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="verify2FA()">Authorize Session 🔒</button>
+      </div>
+
+      <div id="authProfile" style="display: none;">
+        <div style="background: rgba(0,212,170,0.1); border: 1px solid var(--accent2); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
+          <div style="font-weight: 800; color: var(--accent2);">ADMIN опис профиля</div>
+          <p style="font-size: 0.82rem; margin-top: 4px;">Superuser profile active. Scraper 3-thread REST API access granted.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Profile Description</label>
+          <textarea class="form-input" id="profileBioInput" rows="3">Head of Infrastructure & Real-Time European Data Stream Architecture.</textarea>
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="saveProfileBio()">Save Profile Bio</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeAuthModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- Create Channel Modal -->
+  <div class="modal-overlay" id="createChannelModal">
+    <div class="modal-card">
+      <div class="modal-title">Create a New Channel</div>
+      <div class="modal-subtitle">Channels are where your team communicates about specific topics.</div>
+      <div class="form-group">
+        <label class="form-label">Channel Name</label>
+        <input type="text" class="form-input" id="newChannelName" placeholder="e.g. europe-leads-2026" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (Optional)</label>
+        <input type="text" class="form-input" id="newChannelDesc" placeholder="What is this channel about?" />
+      </div>
+      <button class="btn btn-primary" style="width: 100%;" onclick="createNewChannel()">Create Channel</button>
+      <button class="btn btn-sm" style="margin-top: 10px; width: 100%;" onclick="closeCreateChannelModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Area -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ── Application Logic ── -->
+  <script>
+    // State Store
+    const state = {
+      currentChannelId: 'general',
+      channels: {
+        'general': { name: '#general', desc: 'Company-wide announcements and general discussion' },
+        'leads-and-sales': { name: '#leads-and-sales', desc: 'Real-time European client leads engine feed from 20+ platforms' },
+        'dev-team': { name: '#dev-team', desc: 'Engineering & Architecture updates' },
+        'announcements': { name: '#announcements', desc: 'Official company announcements' },
+        'design-system': { name: '#design-system', desc: 'UI/UX Glassmorphism components' },
+        'random': { name: '#random', desc: 'Coffee break & non-work chatter' },
+        'dm-danila': { name: '💬 Danila Viier (You)', desc: 'Direct message thread with Danila' },
+        'dm-bot': { name: '⚡ Parser Engine Bot', desc: 'AI Scraper Assistant Direct Stream' },
+        'dm-elon': { name: '💬 Elon Musk', desc: 'SpaceX & X integration chat' },
+        'dm-sam': { name: '💬 Sam Altman', desc: 'OpenAI & LLM API partnership' }
+      },
+      messages: {
+        'general': [
+          {
+            id: 'm1',
+            author: 'Danila Viier',
+            badge: 'FOUNDER',
+            time: '10:14 AM',
+            text: 'Welcome to the official Slack Hub workspace! 🚀 We have deployed our 3-thread concurrent REST parser on Vercel.',
+            reactions: { '👍': 6, '🚀': 14, '❤️': 8 },
+            attachments: ['vercel_deploy_v4.pdf', 'architecture_diagram.png'],
+            repliesCount: 3
+          },
+          {
+            id: 'm2',
+            author: 'Sarah Miller',
+            badge: 'SALES LEAD',
+            time: '10:22 AM',
+            text: 'Checking `#leads-and-sales` for live European client requests! The lead capture rate is up 340% this week.',
+            reactions: { '🔥': 9, '👏': 5 },
+            repliesCount: 0
+          }
+        ],
+        'leads-and-sales': [
+          {
+            id: 'm3',
+            author: 'Parser Engine Bot',
+            badge: 'AI BOT ⚡',
+            time: 'Just now',
+            text: '🎯 **NEW HIGH-INTENT LEAD DETECTED FROM EUROPEAN NETWORK**',
+            isLead: true,
+            leadData: {
+              title: 'Looking for bulk electronics supplier in Germany/France (Budget €45,000)',
+              platform: 'Threads / Wallapop',
+              contact: '@tech_buyer_de',
+              intentScore: '98%'
+            },
+            reactions: { '🚀': 18, '💰': 12 },
+            repliesCount: 2
+          },
+          {
+            id: 'm4',
+            author: 'Parser Engine Bot',
+            badge: 'AI BOT ⚡',
+            time: '2 mins ago',
+            text: '🎯 **NEW QUALIFIED INQUIRY — LUXURY WATCH & FASHION PARSER**',
+            isLead: true,
+            leadData: {
+              title: 'Seeking API endpoint for live catalog synchronization of luxury timepieces',
+              platform: 'LinkedIn / Allegro',
+              contact: 'benjamin.fr@watchtrade.eu',
+              intentScore: '94%'
+            },
+            reactions: { '🔥': 7 },
+            repliesCount: 1
+          }
+        ],
+        'dev-team': [
+          {
+            id: 'm5',
+            author: 'Alex Rivera',
+            badge: 'TECH LEAD',
+            time: '09:45 AM',
+            text: 'All 3 concurrent REST scraping threads are responding in <300ms on Vercel Edge Serverless endpoints! ⚡',
+            reactions: { '⚡': 11, '💯': 7 },
+            repliesCount: 0
+          }
+        ]
+      },
+      threads: {
+        'm1': [
+          { author: 'Alex Rivera', time: '10:16 AM', text: 'Awesome! All API endpoints `/api/slack/messages` are active.' },
+          { author: 'Sarah Miller', time: '10:18 AM', text: 'Is the 2FA PIN still `994-827`?' },
+          { author: 'Danila Viier', time: '10:20 AM', text: 'Yes, 2FA code is `994-827` for admin access!' }
+        ],
+        'm3': [
+          { author: 'Sarah Miller', time: 'Just now', text: 'Claimed this lead! Sending quote to `@tech_buyer_de` now.' }
+        ]
+      },
+      activeThreadMsgId: null
+    };
+
+    // DOM Elements & Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      renderMessages();
+
+      // Enter key for composer
+      document.getElementById('messageInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    });
+
+    // Render Messages for Active Channel
+    function renderMessages() {
+      const container = document.getElementById('messageStream');
+      const channelMsgs = state.messages[state.currentChannelId] || [];
+
+      if (channelMsgs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 0; color: var(--text-dim);">
+            <div style="font-size: 2.5rem; margin-bottom: 10px;">💬</div>
+            <h3>This is the start of ${state.channels[state.currentChannelId]?.name || '#channel'}</h3>
+            <p style="font-size: 0.85rem; margin-top: 4px;">Send a message to kick off the conversation!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = channelMsgs.map(msg => {
+        const reactionsHtml = Object.entries(msg.reactions || {}).map(([emoji, count]) => `
+          <div class="reaction-pill" onclick="toggleReaction('${msg.id}', '${emoji}')">
+            <span>${emoji}</span> <span>${count}</span>
+          </div>
+        `).join('');
+
+        const attachmentsHtml = (msg.attachments || []).map(att => `
+          <div class="attachment-chip">📎 ${att}</div>
+        `).join('');
+
+        let leadHtml = '';
+        if (msg.isLead && msg.leadData) {
+          leadHtml = `
+            <div class="lead-card">
+              <div class="lead-header">
+                <span class="lead-title">${msg.leadData.title}</span>
+                <span class="lead-platform">${msg.leadData.platform}</span>
+              </div>
+              <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 8px;">
+                Contact: <b style="color: #fff;">${msg.leadData.contact}</b> | Intent Score: <b style="color: var(--accent2);">${msg.leadData.intentScore}</b>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="showToast('Lead contact details exported!')">Direct Outreach</button>
+                <button class="btn btn-sm" onclick="showToast('Assigned to Sarah Miller')">Assign Rep</button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="msg-group" id="msg-${msg.id}">
+            <div class="msg-hover-tools">
+              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '👍')">👍</button>
+              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '❤️')">❤️</button>
+              <button class="tool-btn" onclick="toggleReaction('${msg.id}', '🚀')">🚀</button>
+              <button class="tool-btn" onclick="openThread('${msg.id}')" title="Reply in Thread">💬</button>
+            </div>
+
+            <div class="msg-avatar">${msg.author[0]}</div>
+
+            <div class="msg-content">
+              <div class="msg-meta">
+                <span class="msg-author">${msg.author}</span>
+                ${msg.badge ? `<span class="msg-badge">${msg.badge}</span>` : ''}
+                <span class="msg-time">${msg.time}</span>
+              </div>
+              <div class="msg-text">${msg.text}</div>
+              ${leadHtml}
+              ${attachmentsHtml ? `<div class="msg-attachments">${attachmentsHtml}</div>` : ''}
+              ${reactionsHtml ? `<div class="reactions-bar">${reactionsHtml}</div>` : ''}
+              ${msg.repliesCount > 0 ? `
+                <div class="thread-link-bar" onclick="openThread('${msg.id}')">
+                  💬 ${msg.repliesCount} ${msg.repliesCount === 1 ? 'reply' : 'replies'}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Channel Switching
+    function switchChannel(channelId, name, desc) {
+      state.currentChannelId = channelId;
+      document.getElementById('currentChannelName').innerText = name;
+      document.getElementById('currentChannelDesc').innerText = desc;
+      document.getElementById('messageInput').placeholder = `Message ${name}...`;
+
+      document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      renderMessages();
+    }
+
+    // Send New Message
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newMsg = {
+        id: 'msg_' + Date.now(),
+        author: 'Danila Viier',
+        badge: 'YOU',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: text,
+        reactions: {},
+        repliesCount: 0
+      };
+
+      if (!state.messages[state.currentChannelId]) {
+        state.messages[state.currentChannelId] = [];
+      }
+      state.messages[state.currentChannelId].push(newMsg);
+      input.value = '';
+
+      renderMessages();
+      showToast('Message sent to ' + state.channels[state.currentChannelId]?.name);
+    }
+
+    // Reactions Toggle
+    function toggleReaction(msgId, emoji) {
+      const msgs = state.messages[state.currentChannelId] || [];
+      const msg = msgs.find(m => m.id === msgId);
+      if (msg) {
+        msg.reactions = msg.reactions || {};
+        msg.reactions[emoji] = (msg.reactions[emoji] || 0) + 1;
+        renderMessages();
+      }
+    }
+
+    // Thread Panels
+    function openThread(msgId) {
+      state.activeThreadMsgId = msgId;
+      document.getElementById('threadPanel').classList.add('open');
+      renderThreadReplies();
+    }
+
+    function closeThread() {
+      state.activeThreadMsgId = null;
+      document.getElementById('threadPanel').classList.remove('open');
+    }
+
+    function renderThreadReplies() {
+      const container = document.getElementById('threadStream');
+      const replies = state.threads[state.activeThreadMsgId] || [];
+
+      if (replies.length === 0) {
+        container.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-dim);">No replies yet. Be the first to reply!</div>';
+        return;
+      }
+
+      container.innerHTML = replies.map(r => `
+        <div style="margin-bottom: 12px; background: var(--surface2); padding: 8px 12px; border-radius: 8px;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); margin-bottom: 2px;">${r.author} • <span style="color: var(--text-dim); font-size: 0.7rem;">${r.time}</span></div>
+          <div style="font-size: 0.85rem;">${r.text}</div>
+        </div>
+      `).join('');
+    }
+
+    function sendThreadReply() {
+      const input = document.getElementById('threadInput');
+      const text = input.value.trim();
+      if (!text || !state.activeThreadMsgId) return;
+
+      if (!state.threads[state.activeThreadMsgId]) {
+        state.threads[state.activeThreadMsgId] = [];
+      }
+
+      state.threads[state.activeThreadMsgId].push({
+        author: 'Danila Viier',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: text
+      });
+
+      // Update reply count on parent
+      const msgs = state.messages[state.currentChannelId] || [];
+      const parent = msgs.find(m => m.id === state.activeThreadMsgId);
+      if (parent) parent.repliesCount = (parent.repliesCount || 0) + 1;
+
+      input.value = '';
+      renderThreadReplies();
+      renderMessages();
+      showToast('Thread reply added');
+    }
+
+    // Formatting Toolbar Helpers
+    function insertFormatting(type) {
+      const textarea = document.getElementById('messageInput');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.substring(start, end) || 'text';
+
+      let formatted = selected;
+      if (type === 'bold') formatted = `**${selected}**`;
+      if (type === 'italic') formatted = `_${selected}_`;
+      if (type === 'code') formatted = `\`${selected}\``;
+      if (type === 'link') formatted = `[${selected}](https://)`;
+
+      textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
+    }
+
+    function insertEmoji(emoji) {
+      const textarea = document.getElementById('messageInput');
+      textarea.value += ' ' + emoji;
+    }
+
+    function attachFile() {
+      const fileName = prompt('Enter filename to attach:', 'project_spec_2026.pdf');
+      if (fileName) {
+        const textarea = document.getElementById('messageInput');
+        textarea.value += ` [File: ${fileName}]`;
+        showToast('Attached ' + fileName);
+      }
+    }
+
+    // Lead Fetch & Export
+    function triggerLeadFetch() {
+      showToast('🔄 Fetching live European client leads across 20+ platforms...');
+      setTimeout(() => {
+        const newLead = {
+          id: 'lead_' + Date.now(),
+          author: 'Parser Engine Bot',
+          badge: 'AI BOT ⚡',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: '🎯 **NEW LIVE LEAD — GERMAN E-COMMERCE INTEGRATION**',
+          isLead: true,
+          leadData: {
+            title: 'Wants automated inventory parser for 15,000 product SKUs',
+            platform: 'Kleinanzeigen / Substack',
+            contact: 'dev-team@berlin-tech.de',
+            intentScore: '99%'
+          },
+          reactions: { '🚀': 3 },
+          repliesCount: 0
+        };
+
+        if (!state.messages['leads-and-sales']) state.messages['leads-and-sales'] = [];
+        state.messages['leads-and-sales'].unshift(newLead);
+        if (state.currentChannelId === 'leads-and-sales') renderMessages();
+        showToast('✨ New high-intent lead pushed to #leads-and-sales!');
+      }, 800);
+    }
+
+    function exportChannelHistory() {
+      const logData = JSON.stringify(state.messages[state.currentChannelId] || [], null, 2);
+      const blob = new Blob([logData], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `slack_channel_${state.currentChannelId}_export.json`;
+      a.click();
+      showToast('Channel log exported as JSON file!');
+    }
+
+    // Modals & 2FA Auth logic
+    function openAuthModal() {
+      document.getElementById('authModal').classList.add('active');
+    }
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('active');
+    }
+    function proceedTo2FA() {
+      document.getElementById('authStep1').style.display = 'none';
+      document.getElementById('authStep2').style.display = 'block';
+    }
+    function verify2FA() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (pin === '994-827') {
+        document.getElementById('authStep2').style.display = 'none';
+        document.getElementById('authProfile').style.display = 'block';
+        document.getElementById('userStatusText').innerText = 'Admin (2FA Verified)';
+        showToast('🔓 2FA Verification Success! Admin access granted.');
+      } else {
+        showToast('❌ Invalid 2FA PIN. Enter 994-827');
+      }
+    }
+    function saveProfileBio() {
+      showToast('Profile bio updated successfully!');
+      closeAuthModal();
+    }
+
+    function openCreateChannelModal() {
+      document.getElementById('createChannelModal').classList.add('active');
+    }
+    function closeCreateChannelModal() {
+      document.getElementById('createChannelModal').classList.remove('active');
+    }
+    function createNewChannel() {
+      const name = document.getElementById('newChannelName').value.trim().toLowerCase().replace(/\s+/g, '-');
+      const desc = document.getElementById('newChannelDesc').value.trim() || 'Custom channel';
+      if (!name) return;
+
+      state.channels[name] = { name: '#' + name, desc: desc };
+      state.messages[name] = [];
+
+      closeCreateChannelModal();
+      switchChannel(name, '#' + name, desc);
+      showToast('Created channel #' + name);
+    }
+
+    // Toast Notification System
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span>⚡</span> <span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
