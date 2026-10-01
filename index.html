@@ -1099,9 +1099,200 @@
         <div class="subpage-tab" id="subtabTeam" onclick="switchSubpageTab('team')">👥 Core Engineers Roster</div>
       </div>
 
-      <!-- Messages Stream -->
-      <div class="message-stream" id="messageStream">
+      <!-- Subpage 1: Messages Stream (Default) -->
+      <div class="message-stream subpage-view" id="messageStream">
         <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- Subpage 2: Trello & Jira Workstation Inline Subpage View -->
+      <div class="subpage-view" id="jiraWorkstationSubpage" style="display: none; flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-dark);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; background: var(--surface); padding: 16px; border-radius: 12px; border: 1px solid var(--jira-blue);">
+          <div>
+            <h2 style="font-size: 1.2rem; font-weight: 800; color: #4c9aff; display: flex; align-items: center; gap: 8px;">
+              <span>🎯</span> Trello & Jira Workstation Board — UE5 Sprint #42
+            </h2>
+            <p style="font-size: 0.82rem; color: var(--text-dim); margin-top: 4px;">Live studio sprint synchronization for Unreal Engine 5 task management.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-jira btn-sm" onclick="openCreateJiraTicketModal()">+ New Jira Ticket</button>
+            <button class="btn btn-trello btn-sm" onclick="showToast('⚡ Trello Board Webhook Synced')">📋 Trello Sync</button>
+          </div>
+        </div>
+
+        <!-- Inline Kanban Board Container -->
+        <div class="kanban-board-container" id="inlineKanbanBoardContainer">
+          <!-- Col 1: Backlog / To Do -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>📌 To Do / Backlog</span>
+              <span style="color: var(--accent2);" id="inlineTodoCount">2</span>
+            </div>
+            <div class="kanban-card-list" id="inlineTodoCardList" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="kanban-card" onclick="openEditJiraCardModal('JIRA UE5-4921', 'Fix C++ Locomotion physics crash on slope sprint', '@alex.rivera', 'High 🟧', 'todoCardList', this)">
+                <span class="kanban-tag jira">JIRA UE5-4921</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Fix C++ Locomotion physics crash on slope sprint</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b> | Priority: <b style="color: #ff6b81;">High</b></div>
+              </div>
+              <div class="kanban-card" onclick="openEditJiraCardModal('TRELLO CARD', 'Nanite rock mesh LOD streaming optimization', '@elena.rostova', 'Medium 🟨', 'todoCardList', this)">
+                <span class="kanban-tag trello">TRELLO CARD</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Nanite rock mesh LOD streaming optimization</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@elena.rostova</b></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 2: In Progress -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>⚡ In Progress</span>
+              <span style="color: var(--accent2);" id="inlineInProgressCount">2</span>
+            </div>
+            <div class="kanban-card-list" id="inlineInProgressCardList" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="kanban-card" onclick="openEditJiraCardModal('JIRA UE5-4930', 'Implement Lumen GI emissive lighting shaders', '@danila', 'Blocker 🔴', 'inProgressCardList', this)">
+                <span class="kanban-tag jira">JIRA UE5-4930</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Implement Lumen GI emissive lighting shaders</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@danila</b> | Priority: <b style="color: #ff6b81;">Blocker</b></div>
+              </div>
+              <div class="kanban-card" onclick="openEditJiraCardModal('JIRA UE5-4932', 'Package Win64 Standalone automated build v5.4.2', '@build.bot', 'High 🟧', 'inProgressCardList', this)">
+                <span class="kanban-tag jira">JIRA UE5-4932</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Package Win64 Standalone automated build v5.4.2</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@build.bot</b></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 3: In Review / QA -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>🔍 In Review / QA</span>
+              <span style="color: var(--accent2);" id="inlineReviewCount">1</span>
+            </div>
+            <div class="kanban-card-list" id="inlineReviewCardList" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="kanban-card" onclick="openEditJiraCardModal('TRELLO CARD', 'FMOD 3D Spatial audio ambient triggers', '@alex.rivera', 'Low 🟦', 'reviewCardList', this)">
+                <span class="kanban-tag trello">TRELLO CARD</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">FMOD 3D Spatial audio ambient triggers</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 4: Done / Deployed -->
+          <div class="kanban-col">
+            <div class="kanban-col-header">
+              <span>✅ Done</span>
+              <span style="color: var(--accent2);" id="inlineDoneCount">1</span>
+            </div>
+            <div class="kanban-card-list" id="inlineDoneCardList" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="kanban-card" onclick="openEditJiraCardModal('JIRA UE5-4900', 'Unreal Engine 5.4.2 upgrade & shader precompilation', '@danila', 'High 🟧', 'doneCardList', this)">
+                <span class="kanban-tag jira">JIRA UE5-4900</span>
+                <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">Unreal Engine 5.4.2 upgrade & shader precompilation</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim);">Resolved & Verified</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subpage 3: UE5 Automated Packaging & CI/CD Pipeline Subview -->
+      <div class="subpage-view" id="buildsCiCdSubpage" style="display: none; flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-dark);">
+        <div style="background: var(--surface); padding: 18px; border-radius: 12px; border: 1px solid var(--accent); margin-bottom: 16px;">
+          <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--accent2); display: flex; align-items: center; gap: 8px;">
+            <span>📦</span> UE5 Windows Standalone Automated Packaging CI/CD
+          </h2>
+          <p style="font-size: 0.84rem; color: var(--text-dim); margin-top: 4px;">Incredibuild 32 Distributed Nodes | Shader Precompilation Cluster</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+          <div style="background: var(--surface2); padding: 16px; border-radius: 10px; border: 1px solid var(--border-bright);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 800; font-size: 0.9rem;">BUILD #UE5-5421</span>
+              <span class="kanban-tag jira" style="background: rgba(0, 212, 170, 0.2); color: var(--accent2);">SUCCESS</span>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 10px;">Target: Win64 Standalone | Cooked Assets: 14.8 GB</div>
+            <button class="btn btn-sm btn-primary" onclick="showToast('⚡ Downloaded Build Package UE5-5421.zip')">⬇️ Download Package .zip</button>
+          </div>
+          <div style="background: var(--surface2); padding: 16px; border-radius: 10px; border: 1px solid var(--border-bright);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 800; font-size: 0.9rem;">BUILD #UE5-5420</span>
+              <span class="kanban-tag jira" style="background: rgba(0, 212, 170, 0.2); color: var(--accent2);">SUCCESS</span>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 10px;">Target: Linux Dedicated Server | Assets: 8.2 GB</div>
+            <button class="btn btn-sm btn-primary" onclick="showToast('⚡ Downloaded Server Package UE5-5420.tar.gz')">⬇️ Download Server Package</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subpage 4: Shared Log Files & Build Artifacts Gallery Subview -->
+      <div class="subpage-view" id="sharedFilesSubpage" style="display: none; flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-dark);">
+        <div style="background: var(--surface); padding: 18px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px;">
+            <span>📁</span> Shared Studio Log Files & Screenshots
+          </h2>
+          <p style="font-size: 0.84rem; color: var(--text-dim); margin-top: 4px;">UnrealEngine.log dumps, Perforce changelists, and video recording webm files.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer;" onclick="showToast('Opened UnrealEngine-PhysicsCrash.log')">
+            <div style="font-size: 0.9rem; font-weight: 700;">📄 UnrealEngine-PhysicsCrash.log</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 4px;">Uploaded by @alex.rivera | 142.5 KB</div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer;" onclick="showToast('Opened Playtest_Session_Recorded.webm')">
+            <div style="font-size: 0.9rem; font-weight: 700;">🎬 Playtest_Session_Recorded.webm</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 4px;">WebRTC Recording | 18.4 MB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subpage 5: Core Engineers Roster Subview -->
+      <div class="subpage-view" id="teamRosterSubpage" style="display: none; flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-dark);">
+        <div style="background: var(--surface); padding: 18px; border-radius: 12px; border: 1px solid var(--accent); margin-bottom: 16px;">
+          <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px;">
+            <span>👥</span> Core Game Studio Engineers Roster
+          </h2>
+          <p style="font-size: 0.84rem; color: var(--text-dim); margin-top: 4px;">Unreal Engine 5 Core Development & Quality Assurance Team.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">DV</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Danila Viier</div>
+              <div style="font-size: 0.78rem; color: var(--accent2);">Lead Architect (You)</div>
+            </div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">AR</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Alex Rivera</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Core Engine Developer</div>
+            </div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">MV</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Marcus Vance</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Graphics Lead</div>
+            </div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">SC</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Sophia Chen</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Lead QA</div>
+            </div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">DS</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Dmitry Sokolov</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Systems Engineer</div>
+            </div>
+          </div>
+          <div style="background: var(--surface2); padding: 14px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800;">ER</div>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem;">Elena Rostova</div>
+              <div style="font-size: 0.78rem; color: var(--text-dim);">Tech Art Specialist</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Message Composer -->
@@ -1974,22 +2165,35 @@
       }
     }
 
-    // Subpage Navigation ("add subpage top all")
+    // Subpage Navigation ("add subpages Trello & Jira Workstation")
     function switchSubpageTab(tab) {
       document.querySelectorAll('.subpage-tab').forEach(el => el.classList.remove('active'));
       const activeTab = document.getElementById('subtab' + tab.charAt(0).toUpperCase() + tab.slice(1));
       if (activeTab) activeTab.classList.add('active');
 
+      document.querySelectorAll('.subpage-view').forEach(el => el.style.display = 'none');
+      const composer = document.querySelector('.composer-wrapper');
+
       if (tab === 'chat') {
+        document.getElementById('messageStream').style.display = 'flex';
+        if (composer) composer.style.display = 'block';
         showToast('💬 Switched to Messages Stream');
       } else if (tab === 'jira') {
-        openWorkstationModal();
+        document.getElementById('jiraWorkstationSubpage').style.display = 'block';
+        if (composer) composer.style.display = 'none';
+        showToast('📋 Switched to Trello & Jira Workstation Subpage View');
       } else if (tab === 'builds') {
-        switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated packaging pipeline');
+        document.getElementById('buildsCiCdSubpage').style.display = 'block';
+        if (composer) composer.style.display = 'none';
+        showToast('📦 Switched to UE5 Packaging & CI/CD Subpage View');
       } else if (tab === 'files') {
-        showToast('📁 Shared Log Files & Build Artifacts View');
+        document.getElementById('sharedFilesSubpage').style.display = 'block';
+        if (composer) composer.style.display = 'none';
+        showToast('📁 Switched to Shared Log Files & Build Artifacts View');
       } else if (tab === 'team') {
-        showToast('👥 Core Engineers Roster: Danila Viier, Alex Rivera, Marcus Vance, Sophia Chen, Dmitry Sokolov, Elena Rostova');
+        document.getElementById('teamRosterSubpage').style.display = 'block';
+        if (composer) composer.style.display = 'none';
+        showToast('👥 Switched to Core Studio Engineers Roster View');
       }
     }
 
