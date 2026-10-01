@@ -936,6 +936,7 @@
       <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">🎯 Trello & Jira Board</button>
       <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
+      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 Sign In / Sign Up</button>
       <button class="btn btn-ghost btn-sm" onclick="performSignOut()" title="Sign Out of Session">🚪 Sign Out</button>
     </div>
   </div>
@@ -1247,6 +1248,53 @@
       </div>
 
       <button class="btn btn-primary" style="margin-top: 20px; width: 100%; justify-content: center;" onclick="closeSettingsModal()">Save & Apply Settings ⚙️</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 4: USER AUTHENTICATION & SIGN IN / SIGN UP MODAL ── -->
+  <div class="modal-overlay" id="userAuthModal">
+    <div class="modal-card">
+      <div class="modal-title">🔑 User Account Sign In / Sign Up</div>
+      <div class="modal-subtitle">Sign in or register a developer profile for Unreal Engine Studio workspace.</div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signIn')">Sign In</button>
+        <button class="modal-tab-btn" id="tabSignUp" onclick="switchAuthTab('signUp')">Create Account (Sign Up)</button>
+      </div>
+
+      <div id="authFormSignIn">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="userLoginEmail" value="danila@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password Required</label>
+          <input type="password" class="form-input" id="userLoginPass" value="UserPass2026!" placeholder="Enter Password..." />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
+      </div>
+
+      <div id="authFormSignUp" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="signUpName" placeholder="e.g. Marcus Vance" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Studio Role Title</label>
+          <input type="text" class="form-input" id="signUpRole" placeholder="e.g. Graphics Engineer" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="signUpEmail" placeholder="m.vance@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signUpPass" placeholder="Create strong password..." />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignUp()">Register Account & Sign In ✨</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeUserAuthModal()">Close</button>
     </div>
   </div>
 
@@ -2128,10 +2176,59 @@
     function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
 
+    // User Authentication & Sign In / Sign Up
+    function openUserAuthModal() { document.getElementById('userAuthModal').classList.add('active'); }
+    function closeUserAuthModal() { document.getElementById('userAuthModal').classList.remove('active'); }
+    function switchAuthTab(tab) {
+      if (tab === 'signIn') {
+        document.getElementById('tabSignIn').classList.add('active');
+        document.getElementById('tabSignUp').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'block';
+        document.getElementById('authFormSignUp').style.display = 'none';
+      } else {
+        document.getElementById('tabSignUp').classList.add('active');
+        document.getElementById('tabSignIn').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'none';
+        document.getElementById('authFormSignUp').style.display = 'block';
+      }
+    }
+    function performUserSignIn() {
+      const email = document.getElementById('userLoginEmail').value.trim();
+      const pass = document.getElementById('userLoginPass').value.trim();
+      if (!pass) {
+        showToast('❌ Password required for sign in.');
+        return;
+      }
+      const name = email.split('@')[0] || 'Developer';
+      const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+      state.currentUser = {
+        name: formattedName,
+        role: 'Engineering Lead',
+        badge: 'DEV USER'
+      };
+      document.getElementById('userStatusText').innerText = `${state.currentUser.name} (${state.currentUser.role})`;
+      closeUserAuthModal();
+      showToast(`🔑 Signed in successfully as ${state.currentUser.name}!`);
+    }
+    function performUserSignUp() {
+      const name = document.getElementById('signUpName').value.trim() || 'New Developer';
+      const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
+      const pass = document.getElementById('signUpPass').value.trim();
+      if (!pass) {
+        showToast('❌ Please create a password for registration.');
+        return;
+      }
+      state.currentUser = { name, role, badge: role.toUpperCase() };
+      document.getElementById('userStatusText').innerText = `${name} (${role})`;
+      closeUserAuthModal();
+      showToast(`🎉 Account created! Signed in as ${name}.`);
+    }
+
     function performSignOut() {
       state.currentUser = { name: 'Guest Developer', role: 'Signed Out', badge: 'GUEST' };
       document.getElementById('userStatusText').innerText = 'Guest Developer (Signed Out)';
       showToast('🚪 Signed out of workspace session.');
+      openUserAuthModal();
     }
 
     function showToast(msg) {
