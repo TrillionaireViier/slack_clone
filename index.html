@@ -931,13 +931,13 @@
     <div class="top-nav-right">
       <div class="status-badge">
         <span class="status-dot"></span>
-        <span id="userStatusText">Danila Viier (Lead Dev)</span>
+        <span id="userStatusText">Danila Viier (Lead Architect)</span>
       </div>
       <button class="btn btn-jira btn-sm" onclick="openWorkstationModal()">🎯 Trello & Jira Board</button>
       <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
-      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 Sign In / Sign Up</button>
-      <button class="btn btn-ghost btn-sm" onclick="performSignOut()" title="Sign Out of Session">🚪 Sign Out</button>
+      <button class="btn btn-sm" id="authBtnModal" onclick="openUserAuthModal()">🔑 Account / Sign In</button>
+      <button class="btn btn-danger btn-sm" id="signOutBtnNav" onclick="performSignOut()" title="Sign Out of Session">🚪 Sign Out</button>
     </div>
   </div>
 
@@ -1254,8 +1254,20 @@
   <!-- ── MODAL 4: USER AUTHENTICATION & SIGN IN / SIGN UP MODAL ── -->
   <div class="modal-overlay" id="userAuthModal">
     <div class="modal-card">
-      <div class="modal-title">🔑 User Account Sign In / Sign Up</div>
-      <div class="modal-subtitle">Sign in or register a developer profile for Unreal Engine Studio workspace.</div>
+      <div class="modal-title">🔑 User Account & Workspace Session</div>
+      <div class="modal-subtitle">Sign in, register a developer profile, or manage your active studio session.</div>
+
+      <!-- Active User Profile Card inside Modal -->
+      <div id="currentAuthUserCard" style="background: rgba(124, 92, 255, 0.15); border: 1px solid var(--accent); border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem;" id="modalUserAvatar">👤</div>
+          <div>
+            <div style="font-weight: 700; font-size: 0.9rem;" id="modalUserName">Danila Viier</div>
+            <div style="font-size: 0.78rem; color: var(--text-dim);" id="modalUserRole">Lead Architect • Active Session</div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" id="modalSignOutHeaderBtn" onclick="performSignOut()">🚪 Sign Out</button>
+      </div>
 
       <div class="modal-tabs">
         <button class="modal-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signIn')">Sign In</button>
@@ -1271,7 +1283,7 @@
           <label class="form-label">Password Required</label>
           <input type="password" class="form-input" id="userLoginPass" value="UserPass2026!" placeholder="Enter Password..." />
         </div>
-        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
       </div>
 
       <div id="authFormSignUp" style="display: none;">
@@ -1294,7 +1306,10 @@
         <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignUp()">Register Account & Sign In ✨</button>
       </div>
 
-      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeUserAuthModal()">Close</button>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-danger btn-sm" style="flex: 1; justify-content: center;" id="modalSignOutBottomBtn" onclick="performSignOut()">🚪 Sign Out</button>
+        <button class="btn btn-sm" style="flex: 1; justify-content: center;" onclick="closeUserAuthModal()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -1555,6 +1570,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
+      initAuthSession();
       renderMessages();
 
       document.getElementById('messageInput').addEventListener('keydown', (e) => {
@@ -2176,9 +2192,16 @@
     function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
 
-    // User Authentication & Sign In / Sign Up
-    function openUserAuthModal() { document.getElementById('userAuthModal').classList.add('active'); }
-    function closeUserAuthModal() { document.getElementById('userAuthModal').classList.remove('active'); }
+    // User Authentication, Session Persistence & Sign In / Sign Up / Sign Out Logic
+    function openUserAuthModal() {
+      updateAuthUI();
+      document.getElementById('userAuthModal').classList.add('active');
+    }
+
+    function closeUserAuthModal() {
+      document.getElementById('userAuthModal').classList.remove('active');
+    }
+
     function switchAuthTab(tab) {
       if (tab === 'signIn') {
         document.getElementById('tabSignIn').classList.add('active');
@@ -2192,6 +2215,54 @@
         document.getElementById('authFormSignUp').style.display = 'block';
       }
     }
+
+    function initAuthSession() {
+      const saved = localStorage.getItem('slack_clone_user_session');
+      if (saved) {
+        try {
+          state.currentUser = JSON.parse(saved);
+        } catch(e) {
+          state.currentUser = { name: 'Danila Viier', role: 'Lead Architect', badge: 'LEAD', email: 'danila@gamestudio.internal', signedIn: true };
+        }
+      } else {
+        state.currentUser = { name: 'Danila Viier', role: 'Lead Architect', badge: 'LEAD', email: 'danila@gamestudio.internal', signedIn: true };
+        localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      }
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const session = state.currentUser;
+      const statusElem = document.getElementById('userStatusText');
+      const modalAvatar = document.getElementById('modalUserAvatar');
+      const modalName = document.getElementById('modalUserName');
+      const modalRole = document.getElementById('modalUserRole');
+      const modalCard = document.getElementById('currentAuthUserCard');
+      const signOutBtnNav = document.getElementById('signOutBtnNav');
+      const modalSignOutHeaderBtn = document.getElementById('modalSignOutHeaderBtn');
+      const modalSignOutBottomBtn = document.getElementById('modalSignOutBottomBtn');
+
+      if (session && session.signedIn) {
+        if (statusElem) statusElem.innerText = `${session.name} (${session.role})`;
+        if (modalAvatar) modalAvatar.innerText = session.name ? session.name.charAt(0).toUpperCase() : '👤';
+        if (modalName) modalName.innerText = session.name;
+        if (modalRole) modalRole.innerText = `${session.role} • Active Session`;
+        if (modalCard) modalCard.style.background = 'rgba(124, 92, 255, 0.15)';
+        if (signOutBtnNav) signOutBtnNav.style.display = 'inline-flex';
+        if (modalSignOutHeaderBtn) modalSignOutHeaderBtn.style.display = 'inline-flex';
+        if (modalSignOutBottomBtn) modalSignOutBottomBtn.style.display = 'inline-flex';
+      } else {
+        if (statusElem) statusElem.innerText = 'Guest Developer (Signed Out)';
+        if (modalAvatar) modalAvatar.innerText = '❓';
+        if (modalName) modalName.innerText = 'Guest Developer';
+        if (modalRole) modalRole.innerText = 'Not Signed In';
+        if (modalCard) modalCard.style.background = 'rgba(255, 71, 87, 0.15)';
+        if (signOutBtnNav) signOutBtnNav.style.display = 'none';
+        if (modalSignOutHeaderBtn) modalSignOutHeaderBtn.style.display = 'none';
+        if (modalSignOutBottomBtn) modalSignOutBottomBtn.style.display = 'none';
+      }
+    }
+
     function performUserSignIn() {
       const email = document.getElementById('userLoginEmail').value.trim();
       const pass = document.getElementById('userLoginPass').value.trim();
@@ -2204,31 +2275,37 @@
       state.currentUser = {
         name: formattedName,
         role: 'Engineering Lead',
-        badge: 'DEV USER'
+        badge: 'DEV USER',
+        email: email,
+        signedIn: true
       };
-      document.getElementById('userStatusText').innerText = `${state.currentUser.name} (${state.currentUser.role})`;
+      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      updateAuthUI();
       closeUserAuthModal();
       showToast(`🔑 Signed in successfully as ${state.currentUser.name}!`);
     }
+
     function performUserSignUp() {
       const name = document.getElementById('signUpName').value.trim() || 'New Developer';
       const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
       const pass = document.getElementById('signUpPass').value.trim();
+      const email = document.getElementById('signUpEmail').value.trim() || 'dev@gamestudio.internal';
       if (!pass) {
         showToast('❌ Please create a password for registration.');
         return;
       }
-      state.currentUser = { name, role, badge: role.toUpperCase() };
-      document.getElementById('userStatusText').innerText = `${name} (${role})`;
+      state.currentUser = { name, role, badge: role.toUpperCase(), email, signedIn: true };
+      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      updateAuthUI();
       closeUserAuthModal();
       showToast(`🎉 Account created! Signed in as ${name}.`);
     }
 
     function performSignOut() {
-      state.currentUser = { name: 'Guest Developer', role: 'Signed Out', badge: 'GUEST' };
-      document.getElementById('userStatusText').innerText = 'Guest Developer (Signed Out)';
+      state.currentUser = { name: 'Guest Developer', role: 'Signed Out', badge: 'GUEST', email: '', signedIn: false };
+      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      updateAuthUI();
       showToast('🚪 Signed out of workspace session.');
-      openUserAuthModal();
     }
 
     function showToast(msg) {
