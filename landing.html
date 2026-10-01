@@ -54,8 +54,8 @@
     }
     .top-nav-center {
       flex: 1;
-      max-width: 540px;
-      margin: 0 20px;
+      max-width: 500px;
+      margin: 0 16px;
       position: relative;
     }
     .search-input {
@@ -85,7 +85,7 @@
     .top-nav-right {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .status-badge {
@@ -113,10 +113,10 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -157,8 +157,8 @@
       color: #000;
     }
     .btn-sm {
-      padding: 4px 10px;
-      font-size: 0.76rem;
+      padding: 4px 8px;
+      font-size: 0.75rem;
     }
 
     /* ── Main Slack Workspace Layout ── */
@@ -404,6 +404,23 @@
       font-size: 0.92rem;
       line-height: 1.5;
       color: #d8d8e5;
+    }
+    .msg-attachments {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .attachment-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent2);
     }
 
     /* Automated Build & Webhook Alert Cards */
@@ -700,6 +717,24 @@
       color: #fff;
     }
 
+    /* Switch toggle slider */
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .switch-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .switch-desc {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
     /* Toast Notifications */
     .toast-container {
       position: fixed;
@@ -732,6 +767,9 @@
 </head>
 <body>
 
+  <!-- Hidden File Input for Composer Attachment -->
+  <input type="file" id="composerFileInput" style="display: none;" onchange="handleComposerFileSelect(event)" />
+
   <!-- ── Top Navigation Bar ── -->
   <div class="top-nav">
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -749,6 +787,7 @@
         <span class="status-dot"></span>
         <span id="userStatusText">Danila Viier (Lead Dev)</span>
       </div>
+      <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
       <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 Sign In / Sign Up</button>
       <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
       <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
@@ -844,6 +883,7 @@
           <p id="currentChannelDesc">Studio milestone announcements and release targets</p>
         </div>
         <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
           <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
           <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
           <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 /playtest Bug Report</button>
@@ -865,14 +905,14 @@
             <button class="tool-btn" onclick="insertFormatting('code')"><code>&lt;/&gt;</code></button>
             <div style="margin-left: auto; display: flex; gap: 4px;">
               <button class="tool-btn" onclick="openPlaytestModal()" title="Slash command /bug">🐛 Bug</button>
-              <button class="tool-btn" onclick="attachLogFile()" title="Attach Unreal Log File">📎 Attach Log</button>
+              <button class="tool-btn" onclick="triggerComposerFilePicker()" title="Attach Unreal Log File or Screenshot">📎 Attach Log / File</button>
             </div>
           </div>
 
           <textarea class="composer-input" id="messageInput" placeholder="Message #announcements... (Type /playtest or /bug for bug reporter modal)"></textarea>
 
           <div class="composer-footer">
-            <div style="font-size: 0.75rem; color: var(--text-dim);">
+            <div style="font-size: 0.75rem; color: var(--text-dim);" id="composerAttachmentStatus">
               <span>⚡ UE5 Packaging Bot online (Incredibuild 32 Nodes)</span>
             </div>
             <button class="btn btn-primary btn-sm" onclick="sendMessage()">Send ✈️</button>
@@ -897,7 +937,41 @@
 
   </div>
 
-  <!-- ── MODAL 1: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
+  <!-- ── MODAL 1: WORKSPACE & USER SETTINGS MODAL (HIDE THREAD REPLIES OPTION) ── -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-title">⚙️ Workspace & View Settings</div>
+      <div class="modal-subtitle">Customize channel stream displays, thread reply visibility, and notifications.</div>
+
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">Hide Thread Replies in Channel Stream</div>
+          <div class="switch-desc">When enabled, thread links ("💬 X replies") are hidden for a clean stream.</div>
+        </div>
+        <input type="checkbox" id="toggleHideThreads" onchange="toggleThreadRepliesVisibility(this.checked)" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
+      </div>
+
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">Hide Resolved Playtest Bugs</div>
+          <div class="switch-desc">Automatically filter out closed bug reports in #bugs.</div>
+        </div>
+        <input type="checkbox" id="toggleHideBugs" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
+      </div>
+
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">CI/CD Build Packaging Audio Alerts</div>
+          <div class="switch-desc">Play chime notification when UE5 Standalone Win64 build completes.</div>
+        </div>
+        <input type="checkbox" id="toggleAudioBuilds" checked style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" />
+      </div>
+
+      <button class="btn btn-primary" style="margin-top: 20px; width: 100%; justify-content: center;" onclick="closeSettingsModal()">Save & Apply Settings ⚙️</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
   <div class="modal-overlay" id="userAuthModal">
     <div class="modal-card">
       <div class="modal-title">🔑 User Account Authentication</div>
@@ -946,7 +1020,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 2: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
+  <!-- ── MODAL 3: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
   <div class="modal-overlay" id="adminModal">
     <div class="modal-card">
       <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
@@ -998,7 +1072,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 3: PLAYTEST BUG SUBMISSION MODAL ── -->
+  <!-- ── MODAL 4: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
   <div class="modal-overlay" id="playtestModal">
     <div class="modal-card">
       <div class="modal-title">🐛 Playtest Bug Report Submission</div>
@@ -1031,8 +1105,9 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Attach Unreal Log (`Saved/Logs/UnrealEngine.log`)</label>
-        <input type="text" class="form-input" id="bugLogFileInput" value="UnrealEngine_Playtest_CrashDump_2026.log" />
+        <label class="form-label">Attach Unreal Log or Screenshot File (`Saved/Logs/UnrealEngine.log`)</label>
+        <input type="file" class="form-input" id="bugFileUploadInput" accept=".log,.txt,.dmp,.png,.jpg,.jpeg,.zip" onchange="handleBugFileSelect(event)" />
+        <div id="bugFileSelectedName" style="font-size: 0.8rem; color: var(--accent2); margin-top: 4px; font-weight: 600;">Default: UnrealEngine_Playtest_CrashDump_2026.log</div>
       </div>
 
       <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="submitPlaytestReport()">Submit Playtest Bug to #bugs 🚀</button>
@@ -1050,7 +1125,13 @@
         role: 'Lead Architect',
         badge: 'LEAD ARCHITECT'
       },
+      settings: {
+        hideThreadReplies: false,
+        hideBugs: false
+      },
       currentChannelId: 'announcements',
+      selectedComposerAttachment: null,
+      selectedBugFile: 'UnrealEngine_Playtest_CrashDump_2026.log',
       channels: {
         'announcements': { name: '📢 #announcements', desc: 'Studio milestone announcements and release targets' },
         'code-updates': { name: '💻 #code-updates', desc: 'Perforce submit alerts & GitHub C++ pull requests' },
@@ -1308,18 +1389,29 @@
                 Build: <b>${msg.bugData.build}</b> | Reporter: <b>${msg.bugData.reporter}</b> | Log: <code style="color: var(--accent2);">${msg.bugData.logFile}</code>
               </div>
               <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary btn-sm" onclick="showToast('Log file downloaded!')">📥 Download ${msg.bugData.logFile}</button>
+                <button class="btn btn-primary btn-sm" onclick="showToast('Log file ${msg.bugData.logFile} downloaded!')">📥 Download ${msg.bugData.logFile}</button>
                 <button class="btn btn-sm" onclick="showToast('Assigned bug to Lead C++ Dev')">👤 Assign Dev</button>
               </div>
             </div>
           `;
         }
 
+        const attachmentsHtml = (msg.attachments || []).map(att => `
+          <div class="attachment-chip">📎 ${att}</div>
+        `).join('');
+
         const reactionsHtml = Object.entries(msg.reactions || {}).map(([emoji, count]) => `
           <div class="reaction-pill" onclick="toggleReaction('${msg.id}', '${emoji}')">
             <span>${emoji}</span> <span>${count}</span>
           </div>
         `).join('');
+
+        // HIDE THREAD REPLIES CONDITION FROM SETTINGS
+        const threadLinkHtml = (!state.settings.hideThreadReplies && msg.repliesCount > 0) ? `
+          <div class="thread-link-bar" onclick="openThread('${msg.id}')">
+            💬 ${msg.repliesCount} ${msg.repliesCount === 1 ? 'reply' : 'replies'}
+          </div>
+        ` : '';
 
         return `
           <div class="msg-group" id="msg-${msg.id}">
@@ -1339,12 +1431,9 @@
               </div>
               <div class="msg-text">${msg.text}</div>
               ${alertHtml}
+              ${attachmentsHtml ? `<div class="msg-attachments">${attachmentsHtml}</div>` : ''}
               ${reactionsHtml ? `<div class="reactions-bar">${reactionsHtml}</div>` : ''}
-              ${msg.repliesCount > 0 ? `
-                <div class="thread-link-bar" onclick="openThread('${msg.id}')">
-                  💬 ${msg.repliesCount} ${msg.repliesCount === 1 ? 'reply' : 'replies'}
-                </div>
-              ` : ''}
+              ${threadLinkHtml}
             </div>
           </div>
         `;
@@ -1353,7 +1442,7 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Switch active channel (EVERY SINGLE ITEM IS FULLY CLICKABLE)
+    // Switch active channel
     function switchChannel(id, name, desc) {
       state.currentChannelId = id;
       if (!state.messages[id]) state.messages[id] = [];
@@ -1374,14 +1463,15 @@
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const text = input.value.trim();
-      if (!text) return;
+      if (!text && !state.selectedComposerAttachment) return;
 
       const newMsg = {
         id: 'msg_' + Date.now(),
         author: state.currentUser.name,
         badge: state.currentUser.badge,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text,
+        text: text || 'Uploaded attachment',
+        attachments: state.selectedComposerAttachment ? [state.selectedComposerAttachment] : [],
         reactions: {},
         repliesCount: 0
       };
@@ -1389,8 +1479,40 @@
       if (!state.messages[state.currentChannelId]) state.messages[state.currentChannelId] = [];
       state.messages[state.currentChannelId].push(newMsg);
       input.value = '';
+      state.selectedComposerAttachment = null;
+      document.getElementById('composerAttachmentStatus').innerHTML = `<span>⚡ UE5 Packaging Bot online (Incredibuild 32 Nodes)</span>`;
+
       renderMessages();
       showToast('Message posted to ' + state.channels[state.currentChannelId]?.name);
+    }
+
+    // Real File Attachment Functions
+    function triggerComposerFilePicker() {
+      document.getElementById('composerFileInput').click();
+    }
+    function handleComposerFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        state.selectedComposerAttachment = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        document.getElementById('composerAttachmentStatus').innerHTML = `<span style="color: var(--accent2); font-weight: 700;">📎 File Attached: ${state.selectedComposerAttachment}</span>`;
+        showToast('Attached ' + file.name);
+      }
+    }
+
+    function handleBugFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        state.selectedBugFile = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        document.getElementById('bugFileSelectedName').innerText = `Selected File: ${state.selectedBugFile}`;
+        showToast('Selected file: ' + file.name);
+      }
+    }
+
+    // Toggle Thread Replies Option in Settings
+    function toggleThreadRepliesVisibility(hide) {
+      state.settings.hideThreadReplies = hide;
+      renderMessages();
+      showToast(hide ? '🙈 Thread replies hidden from stream' : '👁️ Thread replies visible in stream');
     }
 
     function toggleReaction(msgId, emoji) {
@@ -1475,13 +1597,13 @@
       }, 700);
     }
 
-    // ── USER AUTH MODAL FUNCTIONS (SEPARATE) ──
-    function openUserAuthModal() {
-      document.getElementById('userAuthModal').classList.add('active');
-    }
-    function closeUserAuthModal() {
-      document.getElementById('userAuthModal').classList.remove('active');
-    }
+    // Settings Modal
+    function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
+    function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
+
+    // User Auth Modal
+    function openUserAuthModal() { document.getElementById('userAuthModal').classList.add('active'); }
+    function closeUserAuthModal() { document.getElementById('userAuthModal').classList.remove('active'); }
     function switchAuthTab(tab) {
       if (tab === 'signIn') {
         document.getElementById('tabSignIn').classList.add('active');
@@ -1509,23 +1631,15 @@
     function performUserSignUp() {
       const name = document.getElementById('signUpName').value.trim() || 'New Developer';
       const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
-      state.currentUser = {
-        name,
-        role,
-        badge: role.toUpperCase()
-      };
+      state.currentUser = { name, role, badge: role.toUpperCase() };
       document.getElementById('userStatusText').innerText = `${name} (${role})`;
       closeUserAuthModal();
       showToast(`🎉 Account created! Signed in as ${name}.`);
     }
 
-    // ── ADMIN PANEL MODAL FUNCTIONS (SEPARATE) ──
-    function openAdminModal() {
-      document.getElementById('adminModal').classList.add('active');
-    }
-    function closeAdminModal() {
-      document.getElementById('adminModal').classList.remove('active');
-    }
+    // Admin Modal
+    function openAdminModal() { document.getElementById('adminModal').classList.add('active'); }
+    function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
     function proceedAdmin2FA() {
       const pass = document.getElementById('adminPassword').value.trim();
       if (pass === 'P4A-Admin#2026!SecuredSuperUser') {
@@ -1550,18 +1664,13 @@
       closeAdminModal();
     }
 
-    // ── PLAYTEST BUG MODAL FUNCTIONS ──
-    function openPlaytestModal() {
-      document.getElementById('playtestModal').classList.add('active');
-    }
-    function closePlaytestModal() {
-      document.getElementById('playtestModal').classList.remove('active');
-    }
+    // Playtest Bug Modal
+    function openPlaytestModal() { document.getElementById('playtestModal').classList.add('active'); }
+    function closePlaytestModal() { document.getElementById('playtestModal').classList.remove('active'); }
     function submitPlaytestReport() {
       const title = document.getElementById('bugTitleInput').value.trim();
       const severity = document.getElementById('bugSeverityInput').value;
       const desc = document.getElementById('bugDescInput').value.trim();
-      const logFile = document.getElementById('bugLogFileInput').value.trim();
 
       if (!title) return;
 
@@ -1579,7 +1688,7 @@
           severity: severity === 'BLOCKER' ? '🔴 BLOCKER' : severity === 'HIGH' ? '🟧 HIGH' : '🟦 MEDIUM',
           build: 'v5.4.2-Win64-B1492',
           reporter: state.currentUser.name,
-          logFile: logFile || 'UnrealEngine.log'
+          logFile: state.selectedBugFile || 'UnrealEngine.log'
         },
         reactions: { '🚨': 1 },
         repliesCount: 0
@@ -1590,26 +1699,6 @@
       closePlaytestModal();
       switchChannel('bugs', '🐛 #bugs', 'Tracked playtest bug reports, logs, and stack trace dumps');
       showToast('🚀 Playtest Bug ' + bugId + ' logged to #bugs!');
-    }
-
-    function attachLogFile() {
-      const fileName = prompt('Attach Unreal log file:', 'UnrealEngine_Playtest_Crash.log');
-      if (fileName) {
-        document.getElementById('messageInput').value += ` [Attached Log: ${fileName}]`;
-        showToast('Attached log file ' + fileName);
-      }
-    }
-
-    function insertFormatting(type) {
-      const textarea = document.getElementById('messageInput');
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selected = textarea.value.substring(start, end) || 'text';
-      let formatted = selected;
-      if (type === 'bold') formatted = `**${selected}**`;
-      if (type === 'italic') formatted = `_${selected}_`;
-      if (type === 'code') formatted = `\`${selected}\``;
-      textarea.value = textarea.value.substring(0, start) + formatted + textarea.value.substring(end);
     }
 
     function showToast(msg) {
