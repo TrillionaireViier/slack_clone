@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Slack Clone — Game Studio Architecture, UE5 Packaging CI/CD & Playtest Loop</title>
-  <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks (Perforce/GitHub), and an integrated playtest bug reporting loop." />
+  <title>Slack Clone — Game Studio Architecture, UE5 Packaging CI/CD & Video Huddles</title>
+  <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks (Perforce/GitHub), video huddle calls, and playtest feedback." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,7 +54,7 @@
     }
     .top-nav-center {
       flex: 1;
-      max-width: 500px;
+      max-width: 480px;
       margin: 0 16px;
       position: relative;
     }
@@ -137,6 +137,15 @@
     .btn-primary:hover {
       opacity: 0.9;
       transform: translateY(-1px);
+    }
+    .btn-video {
+      background: rgba(0, 212, 170, 0.15);
+      border: 1px solid var(--accent2);
+      color: var(--accent2);
+    }
+    .btn-video:hover {
+      background: var(--accent2);
+      color: #000;
     }
     .btn-danger {
       background: rgba(255, 71, 87, 0.15);
@@ -629,6 +638,63 @@
       cursor: pointer;
     }
 
+    /* ── Video Call Huddle Grid Styles ── */
+    .huddle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .video-tile {
+      background: #000;
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      height: 190px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-avatar-fallback {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(124, 92, 255, 0.6);
+      animation: audioPulse 2s ease-in-out infinite;
+    }
+    @keyframes audioPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(124, 92, 255, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(0, 212, 170, 0.8); }
+    }
+    .video-overlay-name {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     /* ── Modal System ── */
     .modal-overlay {
       position: fixed;
@@ -648,7 +714,7 @@
       border: 1px solid var(--border-bright);
       border-radius: 16px;
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       padding: 28px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.6);
       animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -787,8 +853,9 @@
         <span class="status-dot"></span>
         <span id="userStatusText">Danila Viier (Lead Dev)</span>
       </div>
+      <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle / Video Call</button>
       <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
-      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 Sign In / Sign Up</button>
+      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
       <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
       <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
       <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">🎮 Package UE5</button>
@@ -883,6 +950,7 @@
           <p id="currentChannelDesc">Studio milestone announcements and release targets</p>
         </div>
         <div style="display: flex; gap: 8px;">
+          <button class="btn btn-video btn-sm" onclick="startVideoHuddle()">📹 Huddle (Video)</button>
           <button class="btn btn-sm" onclick="openSettingsModal()">⚙️ Settings</button>
           <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
           <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
@@ -937,7 +1005,56 @@
 
   </div>
 
-  <!-- ── MODAL 1: WORKSPACE & USER SETTINGS MODAL (HIDE THREAD REPLIES OPTION) ── -->
+  <!-- ── MODAL 1: LIVE HUDDLE / VIDEO CALL MODAL ── -->
+  <div class="modal-overlay" id="huddleModal">
+    <div class="modal-card" style="max-width: 680px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <div class="modal-title">📹 Slack Video Huddle Call</div>
+        <span class="status-badge" style="background: rgba(0,212,170,0.2); color: var(--accent2);">● Live Huddle</span>
+      </div>
+      <div class="modal-subtitle">Real-time studio video & screen share session with WebRTC audio feeds.</div>
+
+      <div class="huddle-grid">
+        <!-- Tile 1: Local User / Host -->
+        <div class="video-tile">
+          <video id="localVideoFeed" autoplay muted playsinline style="display: none;"></video>
+          <div class="video-avatar-fallback" id="localVideoAvatar">DV</div>
+          <div class="video-overlay-name">
+            <span class="status-dot"></span>
+            <span id="huddleHostName">Danila Viier (Host)</span>
+          </div>
+        </div>
+
+        <!-- Tile 2: Alex Rivera -->
+        <div class="video-tile">
+          <div class="video-avatar-fallback" style="background: linear-gradient(135deg, #ff8c42 0%, #ff4757 100%);">AR</div>
+          <div class="video-overlay-name">
+            <span class="status-dot"></span>
+            <span>Alex Rivera (Physics Dev)</span>
+          </div>
+        </div>
+
+        <!-- Tile 3: Sarah Miller Screen Share -->
+        <div class="video-tile">
+          <div style="font-size: 2.2rem; margin-bottom: 6px;">🖥️</div>
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent2);">UE5 Editor — Level 3 Cave</div>
+          <div class="video-overlay-name">
+            <span class="status-dot"></span>
+            <span>Sarah Miller (Screen Share)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; background: var(--surface2); padding: 10px; border-radius: 12px; border: 1px solid var(--border);">
+        <button class="btn btn-sm" id="micToggleBtn" onclick="toggleHuddleMic()">🎤 Mic On</button>
+        <button class="btn btn-sm" id="camToggleBtn" onclick="toggleHuddleCam()">📹 Cam On</button>
+        <button class="btn btn-sm" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+        <button class="btn btn-danger btn-sm" onclick="endVideoHuddle()">🔴 End Call</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: WORKSPACE & VIEW SETTINGS MODAL (HIDE THREAD REPLIES OPTION) ── -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-card">
       <div class="modal-title">⚙️ Workspace & View Settings</div>
@@ -971,7 +1088,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 2: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
+  <!-- ── MODAL 3: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
   <div class="modal-overlay" id="userAuthModal">
     <div class="modal-card">
       <div class="modal-title">🔑 User Account Authentication</div>
@@ -1020,7 +1137,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 3: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
+  <!-- ── MODAL 4: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
   <div class="modal-overlay" id="adminModal">
     <div class="modal-card">
       <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
@@ -1072,7 +1189,7 @@
     </div>
   </div>
 
-  <!-- ── MODAL 4: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
+  <!-- ── MODAL 5: PLAYTEST BUG SUBMISSION MODAL WITH REAL FILE UPLOADER ── -->
   <div class="modal-overlay" id="playtestModal">
     <div class="modal-card">
       <div class="modal-title">🐛 Playtest Bug Report Submission</div>
@@ -1128,6 +1245,12 @@
       settings: {
         hideThreadReplies: false,
         hideBugs: false
+      },
+      huddleState: {
+        active: false,
+        micOn: true,
+        camOn: false,
+        mediaStream: null
       },
       currentChannelId: 'announcements',
       selectedComposerAttachment: null,
@@ -1442,7 +1565,7 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Switch active channel
+    // Switch active channel (SILENT WITHOUT SWITCHED TO TOAST)
     function switchChannel(id, name, desc) {
       state.currentChannelId = id;
       if (!state.messages[id]) state.messages[id] = [];
@@ -1457,7 +1580,7 @@
       if (activeEl) activeEl.classList.add('active');
 
       renderMessages();
-      showToast('Switched to ' + name);
+      // NO TOAST ON CHANNEL SWITCH (Deleted per user request)
     }
 
     function sendMessage() {
@@ -1513,6 +1636,54 @@
       state.settings.hideThreadReplies = hide;
       renderMessages();
       showToast(hide ? '🙈 Thread replies hidden from stream' : '👁️ Thread replies visible in stream');
+    }
+
+    // ── HUDDLE / VIDEO CALL FUNCTIONS ──
+    async function startVideoHuddle() {
+      document.getElementById('huddleModal').classList.add('active');
+      state.huddleState.active = true;
+      showToast('🎥 Joined Slack Video Huddle!');
+
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          state.huddleState.mediaStream = stream;
+          const videoEl = document.getElementById('localVideoFeed');
+          videoEl.srcObject = stream;
+          videoEl.style.display = 'block';
+          document.getElementById('localVideoAvatar').style.display = 'none';
+        }
+      } catch (err) {
+        console.log('WebRTC Camera preview fallback active');
+      }
+    }
+
+    function endVideoHuddle() {
+      if (state.huddleState.mediaStream) {
+        state.huddleState.mediaStream.getTracks().forEach(track => track.stop());
+      }
+      document.getElementById('huddleModal').classList.remove('active');
+      state.huddleState.active = false;
+      showToast('🔴 Left Video Huddle Call');
+    }
+
+    function toggleHuddleMic() {
+      state.huddleState.micOn = !state.huddleState.micOn;
+      const btn = document.getElementById('micToggleBtn');
+      btn.innerText = state.huddleState.micOn ? '🎤 Mic On' : '🎙️ Mic Muted';
+      btn.style.color = state.huddleState.micOn ? 'var(--text)' : 'var(--danger)';
+      showToast(state.huddleState.micOn ? 'Microphone Unmuted' : 'Microphone Muted');
+    }
+
+    function toggleHuddleCam() {
+      state.huddleState.camOn = !state.huddleState.camOn;
+      const btn = document.getElementById('camToggleBtn');
+      btn.innerText = state.huddleState.camOn ? '📹 Cam On' : '📷 Cam Off';
+      showToast(state.huddleState.camOn ? 'Camera Turned On' : 'Camera Turned Off');
+    }
+
+    function toggleScreenShare() {
+      showToast('🖥️ Screen Share active: Unreal Engine 5 Editor (DX12 Render Stream)');
     }
 
     function toggleReaction(msgId, emoji) {
