@@ -939,6 +939,7 @@
       <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
       <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
       <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
+      <button class="btn btn-ghost btn-sm" onclick="performSignOut()" title="Sign Out of Session">🚪 Sign Out</button>
     </div>
   </div>
 
@@ -2148,6 +2149,94 @@
     // Settings Modal
     function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
     function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
+
+    // User Authentication & Sign Up / Sign Out
+    function openUserAuthModal() { document.getElementById('userAuthModal').classList.add('active'); }
+    function closeUserAuthModal() { document.getElementById('userAuthModal').classList.remove('active'); }
+    function switchAuthTab(tab) {
+      if (tab === 'signIn') {
+        document.getElementById('tabSignIn').classList.add('active');
+        document.getElementById('tabSignUp').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'block';
+        document.getElementById('authFormSignUp').style.display = 'none';
+      } else {
+        document.getElementById('tabSignUp').classList.add('active');
+        document.getElementById('tabSignIn').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'none';
+        document.getElementById('authFormSignUp').style.display = 'block';
+      }
+    }
+    function performUserSignIn() {
+      const email = document.getElementById('userLoginEmail').value.trim();
+      const pass = document.getElementById('userLoginPass').value.trim();
+      if (!pass) {
+        showToast('❌ Password required for sign in.');
+        return;
+      }
+      const name = email.split('@')[0] || 'Developer';
+      state.currentUser = {
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        role: 'Engineering Lead',
+        badge: 'DEV USER'
+      };
+      document.getElementById('userStatusText').innerText = `${state.currentUser.name} (${state.currentUser.role})`;
+      closeUserAuthModal();
+      showToast(`🔑 Signed in successfully as ${state.currentUser.name}!`);
+    }
+    function performUserSignUp() {
+      const name = document.getElementById('signUpName').value.trim() || 'New Developer';
+      const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
+      const pass = document.getElementById('signUpPass').value.trim();
+      if (!pass) {
+        showToast('❌ Please create a password for registration.');
+        return;
+      }
+      state.currentUser = { name, role, badge: role.toUpperCase() };
+      document.getElementById('userStatusText').innerText = `${name} (${role})`;
+      closeUserAuthModal();
+      showToast(`🎉 Account created! Signed in as ${name}.`);
+    }
+    function performSignOut() {
+      state.currentUser = { name: 'Guest Developer', role: 'Signed Out', badge: 'GUEST' };
+      document.getElementById('userStatusText').innerText = 'Guest Developer (Signed Out)';
+      showToast('🚪 Signed out of workspace session.');
+      openUserAuthModal();
+    }
+
+    // Admin Panel (Password Protected 2FA)
+    function openAdminModal() {
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminPinInput').value = '';
+      document.getElementById('adminStep1').style.display = 'block';
+      document.getElementById('adminStep2').style.display = 'none';
+      document.getElementById('adminProfileStep').style.display = 'none';
+      document.getElementById('adminModal').classList.add('active');
+    }
+    function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
+    function proceedAdmin2FA() {
+      const pass = document.getElementById('adminPassword').value.trim();
+      if (pass === 'P4A-Admin#2026!SecuredSuperUser') {
+        document.getElementById('adminStep1').style.display = 'none';
+        document.getElementById('adminStep2').style.display = 'block';
+        showToast('🔑 Superuser password verified. Enter 2FA security code.');
+      } else {
+        showToast('❌ Incorrect password. Access denied.');
+      }
+    }
+    function verifyAdmin2FA() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (pin === '994-827') {
+        document.getElementById('adminStep2').style.display = 'none';
+        document.getElementById('adminProfileStep').style.display = 'block';
+        showToast('🔓 2FA Verification Success! Admin Dashboard Unlocked.');
+      } else {
+        showToast('❌ Invalid 2FA PIN. Enter 994-827');
+      }
+    }
+    function saveAdminBio() {
+      showToast('Admin Bio (ADMIN опис профиля) saved successfully!');
+      closeAdminModal();
+    }
 
     // Playtest Bug Modal
     function openPlaytestModal() { document.getElementById('playtestModal').classList.add('active'); }
