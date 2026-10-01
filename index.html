@@ -543,20 +543,31 @@
       border: 1px solid var(--border-bright);
       border-radius: 10px;
       padding: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: element;
+      transition: transform 0.15s, box-shadow 0.15s;
       position: relative;
+      touch-action: none;
+    }
+    .kanban-card * {
+      user-select: none;
+      -webkit-user-select: none;
     }
     .kanban-card:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     }
+    .kanban-card:active {
+      cursor: grabbing;
+    }
     .kanban-card[draggable="true"] {
       cursor: grab;
     }
     .kanban-card.dragging {
-      opacity: 0.4;
+      opacity: 0.35;
       transform: scale(0.95);
       border-style: dashed;
       border-color: var(--accent2);
@@ -1101,6 +1112,12 @@
 
     <!-- Central Chat View -->
     <div class="chat-area" id="chatArea">
+      <!-- Drag & Drop Visual Overlay -->
+      <div id="chatDropOverlay" style="display: none; position: absolute; inset: 0; background: rgba(124, 92, 255, 0.3); backdrop-filter: blur(8px); border: 3px dashed var(--accent2); z-index: 500; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 1.25rem; pointer-events: none; border-radius: 12px; transition: all 0.2s;">
+        <div style="font-size: 3.5rem; margin-bottom: 8px; animation: bounce 1s infinite;">📥</div>
+        <div>DROP FILES HERE TO ATTACH TO CHAT</div>
+        <div style="font-size: 0.85rem; font-weight: 500; color: var(--accent2); margin-top: 6px;">Unreal log files, WebM recordings, screenshots or zip archives</div>
+      </div>
 
       <!-- Chat Header -->
       <div class="chat-header">
@@ -2655,6 +2672,105 @@
       }
     }
 
+    // Touch Drag & Drop support for mobile, tablets & touchscreens
+    let touchCard = null;
+    let touchClone = null;
+    let currentTouchList = null;
+    let touchStartPos = { x: 0, y: 0 };
+    let isTouchDragging = false;
+
+    function handleTouchStart(e) {
+      const card = e.currentTarget;
+      touchCard = card;
+      const touch = e.touches[0];
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      isTouchDragging = false;
+
+      card.addEventListener('touchmove', handleTouchMove, { passive: false });
+      card.addEventListener('touchend', handleTouchEnd);
+    }
+
+    function handleTouchMove(e) {
+      if (!touchCard) return;
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartPos.x);
+      const dy = Math.abs(touch.clientY - touchStartPos.y);
+
+      if (!isTouchDragging && (dx > 8 || dy > 8)) {
+        isTouchDragging = true;
+        touchCard.classList.add('dragging');
+
+        touchClone = touchCard.cloneNode(true);
+        touchClone.style.position = 'fixed';
+        touchClone.style.zIndex = '99999';
+        touchClone.style.pointerEvents = 'none';
+        touchClone.style.width = touchCard.offsetWidth + 'px';
+        touchClone.style.opacity = '0.9';
+        touchClone.style.transform = 'scale(1.04) rotate(1deg)';
+        touchClone.style.boxShadow = '0 12px 30px rgba(0,0,0,0.6)';
+        touchClone.style.left = (touch.clientX - touchCard.offsetWidth / 2) + 'px';
+        touchClone.style.top = (touch.clientY - 30) + 'px';
+        document.body.appendChild(touchClone);
+      }
+
+      if (isTouchDragging) {
+        e.preventDefault();
+        if (touchClone) {
+          touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+          touchClone.style.top = (touch.clientY - 30) + 'px';
+          touchClone.style.display = 'none';
+        }
+
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (touchClone) touchClone.style.display = 'block';
+
+        const list = target ? target.closest('.kanban-card-list') : null;
+        document.querySelectorAll('.kanban-card-list').forEach(l => l.classList.remove('drag-over'));
+        if (list) {
+          list.classList.add('drag-over');
+          currentTouchList = list;
+        } else {
+          currentTouchList = null;
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (touchCard) {
+        touchCard.removeEventListener('touchmove', handleTouchMove);
+        touchCard.removeEventListener('touchend', handleTouchEnd);
+      }
+
+      if (touchClone) {
+        touchClone.remove();
+        touchClone = null;
+      }
+
+      if (touchCard && isTouchDragging) {
+        touchCard.classList.remove('dragging');
+        if (currentTouchList) {
+          currentTouchList.appendChild(touchCard);
+          currentTouchList.classList.remove('drag-over');
+
+          const colHeader = currentTouchList.parentElement ? currentTouchList.parentElement.querySelector('.kanban-col-header span') : null;
+          const colName = colHeader ? colHeader.innerText : 'new status';
+
+          updateKanbanCounts();
+          if (currentTouchList.id.startsWith('inline')) {
+            syncModalFromInline();
+          } else {
+            syncInlineFromModal();
+          }
+          showToast(`⚡ Ticket moved to ${colName}!`);
+        }
+      }
+
+      document.querySelectorAll('.kanban-card-list').forEach(l => l.classList.remove('drag-over'));
+      touchCard = null;
+      currentTouchList = null;
+      isTouchDragging = false;
+    }
+
     function syncInlineFromModal() {
       const map = [
         { m: 'todoCardList', i: 'inlineTodoCardList' },
@@ -2698,6 +2814,9 @@
         card.removeEventListener('dragend', handleKanbanDragEnd);
         card.addEventListener('dragstart', handleKanbanDragStart);
         card.addEventListener('dragend', handleKanbanDragEnd);
+
+        card.removeEventListener('touchstart', handleTouchStart);
+        card.addEventListener('touchstart', handleTouchStart, { passive: true });
       });
 
       document.querySelectorAll('.kanban-card-list').forEach(list => {
@@ -2712,25 +2831,33 @@
 
     function initFileDragAndDrop() {
       const chatArea = document.getElementById('chatArea') || document.querySelector('.chat-area');
+      const dropOverlay = document.getElementById('chatDropOverlay');
       if (!chatArea) return;
 
       ['dragenter', 'dragover'].forEach(evtName => {
-        chatArea.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          chatArea.classList.add('drag-file-over');
+        window.addEventListener(evtName, (e) => {
+          if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+            e.preventDefault();
+            if (dropOverlay) dropOverlay.style.display = 'flex';
+            chatArea.classList.add('drag-file-over');
+          }
         }, false);
       });
 
       ['dragleave', 'drop'].forEach(evtName => {
-        chatArea.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          chatArea.classList.remove('drag-file-over');
+        window.addEventListener(evtName, (e) => {
+          if (e.target === dropOverlay || e.target === chatArea || e.type === 'drop') {
+            if (dropOverlay) dropOverlay.style.display = 'none';
+            chatArea.classList.remove('drag-file-over');
+          }
         }, false);
       });
 
       chatArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (dropOverlay) dropOverlay.style.display = 'none';
+        chatArea.classList.remove('drag-file-over');
+
         const files = e.dataTransfer ? e.dataTransfer.files : null;
         if (files && files.length > 0) {
           const file = files[0];
