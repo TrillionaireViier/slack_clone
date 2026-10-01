@@ -1790,10 +1790,51 @@
         <button class="btn btn-danger btn-sm" style="flex: 1; justify-content: center;" id="modalSignOutBottomBtn" onclick="performSignOut()">🚪 Sign Out</button>
         <button class="btn btn-sm" style="flex: 1; justify-content: center;" onclick="closeUserAuthModal()">Close</button>
       </div>
+  <!-- ── MODAL 6: PLAYTEST & BUG REPORTING MODAL ── -->
+  <div class="modal-overlay" id="playtestModal">
+    <div class="modal-card">
+      <div class="modal-title">🐛 Report Unreal Engine 5 Bug / Playtest Issue</div>
+      <div class="modal-subtitle">Submit automated crash telemetry or engine playtest bug tickets directly to QA.</div>
+
+      <div class="form-group">
+        <label class="form-label">Bug Ticket Summary</label>
+        <input type="text" class="form-input" id="bugReportTitleInput" value="PhysX slope locomotion crash on sprint character movement" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Severity Level</label>
+        <select class="form-input" id="bugReportSeverityInput">
+          <option value="Blocker 🔴">Blocker 🔴 (Critical Crash / Build Failure)</option>
+          <option value="High 🟧" selected>High 🟧 (Core Feature Broken)</option>
+          <option value="Medium 🟨">Medium 🟨 (Visual Artifact / Glitch)</option>
+          <option value="Low 🟦">Low 🟦 (Minor Cosmetic Issue)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Engine Subsystem</label>
+        <select class="form-input" id="bugReportSubsystemInput">
+          <option value="Locomotion & Physics">Locomotion & Physics C++</option>
+          <option value="Lumen Shading & GI">Lumen GI & Emissive Shading</option>
+          <option value="Nanite Mesh Streaming">Nanite Rock & Mesh Streaming</option>
+          <option value="FMOD Spatial Audio">FMOD 3D Spatial Audio</option>
+          <option value="Incredibuild Packaging">Incredibuild Packaging CI/CD</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Attach Log File or Screenshot</label>
+        <input type="file" id="bugFileInput" style="display: none;" onchange="handleBugFileSelect(event)" />
+        <button class="btn btn-sm" type="button" onclick="document.getElementById('bugFileInput').click()">📎 Select Log File</button>
+        <span style="font-size: 0.78rem; color: var(--accent2); margin-left: 8px;" id="bugFileSelectedName">No file selected</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 18px;">
+        <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="submitBugReport()">Submit Bug Report 🐛</button>
+        <button class="btn btn-sm" onclick="closePlaytestModal()">Cancel</button>
+      </div>
     </div>
   </div>
-
-
 
   <div class="toast-container" id="toastContainer"></div>
 
@@ -2386,6 +2427,62 @@
         document.getElementById('bugFileSelectedName').innerText = `Selected File: ${state.selectedBugFile}`;
         showToast('Selected file: ' + file.name);
       }
+    }
+
+    function insertFormatting(type) {
+      const input = document.getElementById('messageInput');
+      if (!input) return;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const text = input.value;
+      const selected = text.substring(start, end);
+
+      let formatted = '';
+      if (type === 'bold') formatted = `**${selected || 'bold text'}**`;
+      else if (type === 'italic') formatted = `*${selected || 'italic text'}*`;
+      else if (type === 'code') formatted = `\`${selected || 'code'}\``;
+
+      input.value = text.substring(0, start) + formatted + text.substring(end);
+      input.focus();
+      showToast(`Text formatted as ${type}`);
+    }
+
+    function openPlaytestModal() {
+      document.getElementById('playtestModal').classList.add('active');
+    }
+
+    function closePlaytestModal() {
+      document.getElementById('playtestModal').classList.remove('active');
+    }
+
+    function submitBugReport() {
+      const titleInput = document.getElementById('bugReportTitleInput');
+      const title = titleInput ? titleInput.value.trim() : '';
+      if (!title) {
+        showToast('❌ Please enter a bug summary.');
+        return;
+      }
+
+      const severity = document.getElementById('bugReportSeverityInput').value;
+      const subsystem = document.getElementById('bugReportSubsystemInput').value;
+
+      const bugMsg = {
+        id: 'bug_' + Date.now(),
+        author: state.currentUser.name || 'QA Tester',
+        badge: 'BUG REPORT 🐛',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: `🐛 **CRITICAL BUG REPORTED**: ${title}\n*Subsystem*: ${subsystem} | *Severity*: ${severity}`,
+        attachments: state.selectedBugFile ? [state.selectedBugFile] : ['UnrealEngine_CrashDump.log (18.4 KB)'],
+        reactions: { '🔴': 4, '🔍': 2 },
+        repliesCount: 0
+      };
+
+      if (!state.messages[state.currentChannelId]) state.messages[state.currentChannelId] = [];
+      state.messages[state.currentChannelId].unshift(bugMsg);
+      renderMessages();
+
+      closePlaytestModal();
+      showToast(`🐛 Submitted bug report: ${title}`);
     }
 
     // Subpage Navigation ("add subpages Trello & Jira Workstation")
