@@ -54,7 +54,7 @@
     }
     .top-nav-center {
       flex: 1;
-      max-width: 600px;
+      max-width: 540px;
       margin: 0 20px;
       position: relative;
     }
@@ -85,7 +85,7 @@
     .top-nav-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .status-badge {
@@ -146,6 +146,15 @@
     .btn-danger:hover {
       background: var(--danger);
       color: #fff;
+    }
+    .btn-admin {
+      background: rgba(255, 140, 66, 0.15);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+    }
+    .btn-admin:hover {
+      background: var(--warning);
+      color: #000;
     }
     .btn-sm {
       padding: 4px 10px;
@@ -219,23 +228,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-    .sidebar-header .compose-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #fff;
-      color: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-    }
-    .sidebar-header .compose-btn:hover {
-      transform: scale(1.1);
     }
 
     .sidebar-scroll {
@@ -683,6 +675,31 @@
       border-color: var(--accent);
     }
 
+    .modal-tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--surface2);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+    .modal-tab-btn {
+      flex: 1;
+      padding: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .modal-tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
     /* Toast Notifications */
     .toast-container {
       position: fixed;
@@ -730,10 +747,12 @@
     <div class="top-nav-right">
       <div class="status-badge">
         <span class="status-dot"></span>
-        <span id="userStatusText">Lead Dev Online</span>
+        <span id="userStatusText">Danila Viier (Lead Dev)</span>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 /playtest Bug Report</button>
-      <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">🎮 Trigger UE5 Packaging</button>
+      <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 Sign In / Sign Up</button>
+      <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
+      <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Bug Report</button>
+      <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">🎮 Package UE5</button>
     </div>
   </div>
 
@@ -742,13 +761,13 @@
 
     <!-- Workspace Rail -->
     <div class="workspace-rail">
-      <div class="workspace-icon active" title="Unreal Engine 5 Game Studio HQ">UE5</div>
-      <div class="workspace-icon" title="Code & Perforce Core">P4</div>
-      <div class="workspace-icon" title="CI/CD Build Pipeline">CI</div>
+      <div class="workspace-icon active" onclick="switchChannel('announcements', '📢 #announcements', 'Studio milestone announcements')" title="Unreal Engine 5 Game Studio HQ">UE5</div>
+      <div class="workspace-icon" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')" title="Code & Perforce Core">P4</div>
+      <div class="workspace-icon" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')" title="CI/CD Build Pipeline">CI</div>
       <div style="margin-top: auto;" class="workspace-icon" onclick="openPlaytestModal()" title="Playtest Bug Feedback">+</div>
     </div>
 
-    <!-- Channels Sidebar: Distraction-Free Architecture -->
+    <!-- Channels Sidebar: Distraction-Free Architecture (ALL CLICKABLE) -->
     <div class="channels-sidebar">
       <div class="sidebar-header">
         <div>
@@ -764,37 +783,37 @@
           <div class="sidebar-section-title">
             <span>Studio Channels</span>
           </div>
-          <div class="channel-item active" onclick="switchChannel('announcements', '📢 #announcements', 'Studio milestone announcements and release targets')">
+          <div class="channel-item active" id="item-announcements" onclick="switchChannel('announcements', '📢 #announcements', 'Studio milestone announcements and release targets')">
             <span>📢</span> <span>announcements</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')">
+          <div class="channel-item" id="item-code-updates" onclick="switchChannel('code-updates', '💻 #code-updates', 'Perforce submit alerts & GitHub C++ pull requests')">
             <span>💻</span> <span>code-updates</span>
             <span class="unread-pill">4</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')">
+          <div class="channel-item" id="item-builds-playtest" onclick="switchChannel('builds-playtest', '📦 #builds-playtest', 'Automated UE5 Packaging CI/CD Windows standalone builds')">
             <span>📦</span> <span>builds-playtest</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('art-assets', '🎨 #art-assets', 'Nanite 3D meshes, Lumen lighting & sound assets')">
+          <div class="channel-item" id="item-art-assets" onclick="switchChannel('art-assets', '🎨 #art-assets', 'Nanite 3D meshes, Lumen lighting & sound assets')">
             <span>🎨</span> <span>art-assets</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('bugs', '🐛 #bugs', 'Tracked playtest bug reports, logs, and stack trace dumps')">
+          <div class="channel-item" id="item-bugs" onclick="switchChannel('bugs', '🐛 #bugs', 'Tracked playtest bug reports, logs, and stack trace dumps')">
             <span>🐛</span> <span>bugs</span>
             <span class="unread-pill">2</span>
           </div>
         </div>
 
-        <!-- 2. Direct Messages -->
+        <!-- 2. Direct Messages (ALL CLICKABLE) -->
         <div class="sidebar-section">
           <div class="sidebar-section-title">
             <span>Core Engineers</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-danila', '💬 Danila Viier (Lead Architect)', 'Direct engineering chat')">
+          <div class="channel-item" id="item-dm-danila" onclick="switchChannel('dm-danila', '💬 Danila Viier (Lead Architect)', 'Direct engineering & C++ locomotion chat')">
             <span class="dm-status-dot online"></span> <span>Danila Viier</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-alex', '💬 Alex Rivera (Physics Dev)', 'Unreal C++ locomotion chat')">
+          <div class="channel-item" id="item-dm-alex" onclick="switchChannel('dm-alex', '💬 Alex Rivera (Physics Dev)', 'Unreal C++ locomotion & PhysX collision chat')">
             <span class="dm-status-dot online"></span> <span>Alex Rivera</span>
           </div>
-          <div class="channel-item" onclick="switchChannel('dm-sarah', '💬 Sarah Miller (QA Lead)', 'Playtest feedback triage')">
+          <div class="channel-item" id="item-dm-sarah" onclick="switchChannel('dm-sarah', '💬 Sarah Miller (QA Lead)', 'Playtest feedback triage & crash dump logs')">
             <span class="dm-status-dot online"></span> <span>Sarah Miller</span>
           </div>
         </div>
@@ -804,10 +823,10 @@
           <div class="sidebar-section-title">
             <span>Automation Webhooks</span>
           </div>
-          <div class="channel-item" onclick="showToast('⚡ Perforce Helix Core Swarm Webhook Connected')">
+          <div class="channel-item" onclick="showToast('⚡ Perforce Helix Core Swarm Webhook Connected & Active')">
             <span>⚡</span> <span>Perforce Swarm</span>
           </div>
-          <div class="channel-item" onclick="showToast('🤖 UE5 Incredibuild Packaging Bot Active')">
+          <div class="channel-item" onclick="showToast('🤖 UE5 Incredibuild Packaging Bot Active (32 Worker Nodes)')">
             <span>🤖</span> <span>UE5 Build Bot</span>
           </div>
         </div>
@@ -824,15 +843,17 @@
           <h3 id="currentChannelName">📢 #announcements</h3>
           <p id="currentChannelDesc">Studio milestone announcements and release targets</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 Log Bug (/playtest)</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm" onclick="openUserAuthModal()">🔑 User Auth</button>
+          <button class="btn btn-admin btn-sm" onclick="openAdminModal()">👑 Admin Panel</button>
+          <button class="btn btn-danger btn-sm" onclick="openPlaytestModal()">🐛 /playtest Bug Report</button>
           <button class="btn btn-primary btn-sm" onclick="triggerUE5Build()">📦 Package UE5 Win64</button>
         </div>
       </div>
 
       <!-- Messages Stream -->
       <div class="message-stream" id="messageStream">
-        <!-- Rendered by JS -->
+        <!-- Rendered dynamically by JS -->
       </div>
 
       <!-- Message Composer -->
@@ -848,7 +869,7 @@
             </div>
           </div>
 
-          <textarea class="composer-input" id="messageInput" placeholder="Message #announcements... (Try typing /playtest or /bug for feedback modal)"></textarea>
+          <textarea class="composer-input" id="messageInput" placeholder="Message #announcements... (Type /playtest or /bug for bug reporter modal)"></textarea>
 
           <div class="composer-footer">
             <div style="font-size: 0.75rem; color: var(--text-dim);">
@@ -876,9 +897,108 @@
 
   </div>
 
-  <!-- ── Modals ── -->
+  <!-- ── MODAL 1: SEPARATE USER SIGN IN / SIGN UP MODAL ── -->
+  <div class="modal-overlay" id="userAuthModal">
+    <div class="modal-card">
+      <div class="modal-title">🔑 User Account Authentication</div>
+      <div class="modal-subtitle">Sign in or register a new team member account for Unreal Engine Studio Slack.</div>
 
-  <!-- Playtest Bug Feedback & Slash Command Modal -->
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="tabSignIn" onclick="switchAuthTab('signIn')">Sign In</button>
+        <button class="modal-tab-btn" id="tabSignUp" onclick="switchAuthTab('signUp')">Create Account (Sign Up)</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="authFormSignIn">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="userLoginEmail" value="danila@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="userLoginPass" value="StudioPass2026!" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignIn()">Sign In to Workspace 🚀</button>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="authFormSignUp" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="signUpName" placeholder="e.g. Marcus Vance" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Studio Role Title</label>
+          <input type="text" class="form-input" id="signUpRole" placeholder="e.g. Senior Technical Artist / QA Engineer" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="signUpEmail" placeholder="m.vance@gamestudio.internal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="signUpPass" placeholder="••••••••••••" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="performUserSignUp()">Register Account ✨</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeUserAuthModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 2: SEPARATE DEDICATED ADMIN PANEL MODAL ── -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-card">
+      <div class="modal-title">👑 Admin Control Dashboard & 2FA</div>
+      <div class="modal-subtitle">Hardened admin management panel for infrastructure & telemetry.</div>
+
+      <!-- Step 1: Admin Password -->
+      <div id="adminStep1">
+        <div class="form-group">
+          <label class="form-label">Superuser Email</label>
+          <input type="email" class="form-input" id="adminEmail" value="admin@parserforall.app" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hardened Superuser Password</label>
+          <input type="password" class="form-input" id="adminPassword" value="P4A-Admin#2026!SecuredSuperUser" />
+        </div>
+        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="proceedAdmin2FA()">Verify Superuser & Proceed to 2FA PIN →</button>
+      </div>
+
+      <!-- Step 2: 2FA Verification -->
+      <div id="adminStep2" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Enter 2FA Security Code (Hint: 994-827)</label>
+          <input type="text" class="form-input" id="adminPinInput" placeholder="000-000" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem; font-weight: 800;" />
+        </div>
+        <button class="btn btn-admin" style="width: 100%; justify-content: center;" onclick="verifyAdmin2FA()">Authorize Superuser Session 🔒</button>
+      </div>
+
+      <!-- Step 3: Admin Bio & Controls -->
+      <div id="adminProfileStep" style="display: none;">
+        <div style="background: rgba(255,140,66,0.1); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; margin-bottom: 14px;">
+          <div style="font-weight: 800; color: var(--warning);">ADMIN опис профиля</div>
+          <p style="font-size: 0.82rem; margin-top: 4px; color: var(--text);">Superuser profile active. 3-thread REST scraper & UE5 Incredibuild pipeline controls authorized.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Profile Description (опис профиля)</label>
+          <textarea class="form-input" id="adminBioInput" rows="3">Head of Infrastructure & Real-Time European Data Stream Architecture.</textarea>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button class="btn btn-admin btn-sm" onclick="showToast('⚡ Incredibuild Cluster Worker Nodes Resynchronized!')">Reset Build Workers</button>
+          <button class="btn btn-danger btn-sm" onclick="showToast('🧹 Webhook Event Logs Cleared')">Clear Log Cache</button>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveAdminBio()">Save Admin Bio & Close</button>
+      </div>
+
+      <button class="btn btn-sm" style="margin-top: 14px; width: 100%;" onclick="closeAdminModal()">Close Admin Panel</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL 3: PLAYTEST BUG SUBMISSION MODAL ── -->
   <div class="modal-overlay" id="playtestModal">
     <div class="modal-card">
       <div class="modal-title">🐛 Playtest Bug Report Submission</div>
@@ -915,7 +1035,7 @@
         <input type="text" class="form-input" id="bugLogFileInput" value="UnrealEngine_Playtest_CrashDump_2026.log" />
       </div>
 
-      <button class="btn btn-primary" style="width: 100%;" onclick="submitPlaytestReport()">Submit Playtest Bug to #bugs 🚀</button>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="submitPlaytestReport()">Submit Playtest Bug to #bugs 🚀</button>
       <button class="btn btn-sm" style="margin-top: 10px; width: 100%;" onclick="closePlaytestModal()">Cancel</button>
     </div>
   </div>
@@ -925,13 +1045,21 @@
   <!-- ── Application Logic ── -->
   <script>
     const state = {
+      currentUser: {
+        name: 'Danila Viier',
+        role: 'Lead Architect',
+        badge: 'LEAD ARCHITECT'
+      },
       currentChannelId: 'announcements',
       channels: {
         'announcements': { name: '📢 #announcements', desc: 'Studio milestone announcements and release targets' },
         'code-updates': { name: '💻 #code-updates', desc: 'Perforce submit alerts & GitHub C++ pull requests' },
         'builds-playtest': { name: '📦 #builds-playtest', desc: 'Automated UE5 Packaging CI/CD Windows standalone builds' },
         'art-assets': { name: '🎨 #art-assets', desc: 'Nanite 3D meshes, Lumen lighting & sound assets' },
-        'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' }
+        'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' },
+        'dm-danila': { name: '💬 Danila Viier', desc: 'Direct message thread with Danila Viier (Lead Architect)' },
+        'dm-alex': { name: '💬 Alex Rivera', desc: 'Direct message thread with Alex Rivera (Physics Dev)' },
+        'dm-sarah': { name: '💬 Sarah Miller', desc: 'Direct message thread with Sarah Miller (QA Lead)' }
       },
       messages: {
         'announcements': [
@@ -940,7 +1068,7 @@
             author: 'Danila Viier',
             badge: 'LEAD ARCHITECT',
             time: '09:00 AM',
-            text: '🎮 **UNREAL ENGINE 5.4.2 MILESTONE MILEPOST REACHED!** All core locomotion, Lumen GI lighting, and packaging pipelines are validated.',
+            text: '🎮 **UNREAL ENGINE 5.4.2 MILESTONE REACHED!** All core locomotion, Lumen GI lighting, and packaging pipelines are validated.',
             reactions: { '🚀': 14, '🔥': 19, '🙌': 8 },
             repliesCount: 2
           }
@@ -1004,6 +1132,17 @@
             repliesCount: 3
           }
         ],
+        'art-assets': [
+          {
+            id: 'm_art1',
+            author: 'Elena Rostova',
+            badge: 'LEAD ARTIST 🎨',
+            time: '10:30 AM',
+            text: '🎨 Updated Nanite rock meshes and Lumen emissive textures for Level 2 Cave Dungeon. Check out Perforce submit #49275!',
+            reactions: { '🎨': 9, '❤️': 6 },
+            repliesCount: 1
+          }
+        ],
         'bugs': [
           {
             id: 'm5',
@@ -1022,6 +1161,39 @@
             },
             reactions: { '🚨': 8 },
             repliesCount: 2
+          }
+        ],
+        'dm-danila': [
+          {
+            id: 'm_dm1',
+            author: 'Alex Rivera',
+            badge: 'PHYSICS DEV',
+            time: '09:12 AM',
+            text: 'Hey Danila! The C++ character movement component refactor is submitted in P4 CL #49281.',
+            reactions: { '👍': 2 },
+            repliesCount: 0
+          }
+        ],
+        'dm-alex': [
+          {
+            id: 'm_dm2',
+            author: 'Danila Viier',
+            badge: 'LEAD ARCHITECT',
+            time: '09:15 AM',
+            text: 'Great work Alex! I am running the UE5 Win64 standalone packager now.',
+            reactions: { '🚀': 1 },
+            repliesCount: 0
+          }
+        ],
+        'dm-sarah': [
+          {
+            id: 'm_dm3',
+            author: 'Sarah Miller',
+            badge: 'QA LEAD',
+            time: '11:32 AM',
+            text: 'Hi Danila, I just submitted BUG-2026-0891 to #bugs with full log dump attached.',
+            reactions: { '👀': 1 },
+            repliesCount: 0
           }
         ]
       },
@@ -1061,7 +1233,7 @@
         container.innerHTML = `
           <div style="text-align: center; padding: 40px 0; color: var(--text-dim);">
             <div style="font-size: 2.5rem; margin-bottom: 10px;">💬</div>
-            <h3>Start of ${state.channels[state.currentChannelId]?.name}</h3>
+            <h3>Start of ${state.channels[state.currentChannelId]?.name || 'channel'}</h3>
             <p style="font-size: 0.85rem; margin-top: 4px;">Send a message or trigger a webhook alert!</p>
           </div>
         `;
@@ -1085,7 +1257,7 @@
               <div style="font-size: 0.82rem; margin: 8px 0; color: var(--text-dim);"><b>Recent Changelog:</b><ul style="padding-left: 18px; margin-top: 4px; color: var(--text);">${changelogItems}</ul></div>
               <div style="display: flex; gap: 8px; margin-top: 12px;">
                 <a href="${msg.buildData.s3Url}" target="_blank" class="btn btn-primary btn-sm">💾 Download Win64 Standalone Zip (14.2 GB)</a>
-                <button class="btn btn-sm" onclick="showToast('CDN Mirror Link Copied to Clipboard!')">🔗 Copy CDN Mirror</button>
+                <button class="btn btn-sm" onclick="showToast('CDN Mirror Link Copied!')">🔗 Copy Mirror</button>
               </div>
             </div>
           `;
@@ -1181,15 +1353,22 @@
       container.scrollTop = container.scrollHeight;
     }
 
+    // Switch active channel (EVERY SINGLE ITEM IS FULLY CLICKABLE)
     function switchChannel(id, name, desc) {
       state.currentChannelId = id;
+      if (!state.messages[id]) state.messages[id] = [];
+      if (!state.channels[id]) state.channels[id] = { name, desc };
+
       document.getElementById('currentChannelName').innerText = name;
       document.getElementById('currentChannelDesc').innerText = desc;
       document.getElementById('messageInput').placeholder = `Message ${name}...`;
 
       document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      const activeEl = document.getElementById('item-' + id);
+      if (activeEl) activeEl.classList.add('active');
+
       renderMessages();
+      showToast('Switched to ' + name);
     }
 
     function sendMessage() {
@@ -1199,8 +1378,8 @@
 
       const newMsg = {
         id: 'msg_' + Date.now(),
-        author: 'Danila Viier',
-        badge: 'LEAD DEV',
+        author: state.currentUser.name,
+        badge: state.currentUser.badge,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text,
         reactions: {},
@@ -1253,7 +1432,7 @@
       if (!text || !state.activeThreadMsgId) return;
       if (!state.threads[state.activeThreadMsgId]) state.threads[state.activeThreadMsgId] = [];
       state.threads[state.activeThreadMsgId].push({
-        author: 'Danila Viier',
+        author: state.currentUser.name,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text
       });
@@ -1296,7 +1475,82 @@
       }, 700);
     }
 
-    // Playtest Bug Modal
+    // ── USER AUTH MODAL FUNCTIONS (SEPARATE) ──
+    function openUserAuthModal() {
+      document.getElementById('userAuthModal').classList.add('active');
+    }
+    function closeUserAuthModal() {
+      document.getElementById('userAuthModal').classList.remove('active');
+    }
+    function switchAuthTab(tab) {
+      if (tab === 'signIn') {
+        document.getElementById('tabSignIn').classList.add('active');
+        document.getElementById('tabSignUp').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'block';
+        document.getElementById('authFormSignUp').style.display = 'none';
+      } else {
+        document.getElementById('tabSignUp').classList.add('active');
+        document.getElementById('tabSignIn').classList.remove('active');
+        document.getElementById('authFormSignIn').style.display = 'none';
+        document.getElementById('authFormSignUp').style.display = 'block';
+      }
+    }
+    function performUserSignIn() {
+      const email = document.getElementById('userLoginEmail').value.trim();
+      state.currentUser = {
+        name: email.split('@')[0],
+        role: 'Engineering Lead',
+        badge: 'DEV USER'
+      };
+      document.getElementById('userStatusText').innerText = `${state.currentUser.name} (Online)`;
+      closeUserAuthModal();
+      showToast(`Welcome back, ${state.currentUser.name}! Session authenticated.`);
+    }
+    function performUserSignUp() {
+      const name = document.getElementById('signUpName').value.trim() || 'New Developer';
+      const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
+      state.currentUser = {
+        name,
+        role,
+        badge: role.toUpperCase()
+      };
+      document.getElementById('userStatusText').innerText = `${name} (${role})`;
+      closeUserAuthModal();
+      showToast(`🎉 Account created! Signed in as ${name}.`);
+    }
+
+    // ── ADMIN PANEL MODAL FUNCTIONS (SEPARATE) ──
+    function openAdminModal() {
+      document.getElementById('adminModal').classList.add('active');
+    }
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.remove('active');
+    }
+    function proceedAdmin2FA() {
+      const pass = document.getElementById('adminPassword').value.trim();
+      if (pass === 'P4A-Admin#2026!SecuredSuperUser') {
+        document.getElementById('adminStep1').style.display = 'none';
+        document.getElementById('adminStep2').style.display = 'block';
+      } else {
+        showToast('❌ Invalid superuser password.');
+      }
+    }
+    function verifyAdmin2FA() {
+      const pin = document.getElementById('adminPinInput').value.trim();
+      if (pin === '994-827') {
+        document.getElementById('adminStep2').style.display = 'none';
+        document.getElementById('adminProfileStep').style.display = 'block';
+        showToast('🔓 2FA Verification Success! Admin Dashboard Active.');
+      } else {
+        showToast('❌ Invalid 2FA PIN. Use 994-827');
+      }
+    }
+    function saveAdminBio() {
+      showToast('Admin Bio (ADMIN опис профиля) saved successfully!');
+      closeAdminModal();
+    }
+
+    // ── PLAYTEST BUG MODAL FUNCTIONS ──
     function openPlaytestModal() {
       document.getElementById('playtestModal').classList.add('active');
     }
@@ -1314,7 +1568,7 @@
       const bugId = 'BUG-2026-' + Math.floor(1000 + Math.random() * 9000);
       const bugMsg = {
         id: 'bug_' + Date.now(),
-        author: 'Danila Viier',
+        author: state.currentUser.name,
         badge: 'PLAYTESTER 🎮',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text: `🚨 **NEW PLAYTEST BUG REPORT SUBMITTED [${bugId}]**`,
@@ -1324,7 +1578,7 @@
           title,
           severity: severity === 'BLOCKER' ? '🔴 BLOCKER' : severity === 'HIGH' ? '🟧 HIGH' : '🟦 MEDIUM',
           build: 'v5.4.2-Win64-B1492',
-          reporter: 'Danila Viier',
+          reporter: state.currentUser.name,
           logFile: logFile || 'UnrealEngine.log'
         },
         reactions: { '🚨': 1 },
