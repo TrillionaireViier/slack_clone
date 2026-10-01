@@ -1182,7 +1182,13 @@
     <div class="modal-card" style="max-width: 680px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <div class="modal-title">📹 Slack Video Huddle Call</div>
-        <span class="status-badge" style="background: rgba(0,212,170,0.2); color: var(--accent2);">● Live Huddle</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="status-badge" id="recordingIndicator" style="background: rgba(239, 68, 68, 0.2); color: var(--danger); font-weight: 700; display: none; align-items: center; gap: 6px;">
+            <span style="width: 8px; height: 8px; background: var(--danger); border-radius: 50%; display: inline-block; animation: pulse 1s infinite;"></span>
+            <span id="recordingTimerText">🔴 REC 00:00</span>
+          </span>
+          <span class="status-badge" style="background: rgba(0,212,170,0.2); color: var(--accent2);">● Live Huddle</span>
+        </div>
       </div>
       <div class="modal-subtitle">Real-time studio video & screen share session with WebRTC audio feeds.</div>
 
@@ -1212,6 +1218,7 @@
         <button class="btn btn-sm" id="micToggleBtn" onclick="toggleHuddleMic()">🎤 Mic On</button>
         <button class="btn btn-sm" id="camToggleBtn" onclick="toggleHuddleCam()">📹 Cam On</button>
         <button class="btn btn-primary btn-sm" id="screenShareBtn" onclick="toggleScreenShare()">🖥️ Share Screen</button>
+        <button class="btn btn-danger btn-sm" id="recToggleBtn" onclick="toggleAutoRecording()">🔴 Auto-REC (ON)</button>
         <button class="btn btn-danger btn-sm" onclick="endVideoHuddle()">🔴 End Call</button>
       </div>
     </div>
@@ -1266,7 +1273,12 @@
         mediaStream: null,
         screenSharing: false,
         screenStream: null,
-        dx12AnimId: null
+        dx12AnimId: null,
+        autoRecord: true,
+        isRecording: false,
+        recordedChunks: [],
+        recTimerId: null,
+        recSeconds: 0
       },
       currentChannelId: 'announcements',
       selectedComposerAttachment: null,
@@ -1744,6 +1756,7 @@
     }
 
     // ── HUDDLE / VIDEO CALL FUNCTIONS ──
+    // ── HUDDLE / AUTOMATED VIDEO RECORDING FUNCTIONS ──
     async function startVideoHuddle() {
       document.getElementById('huddleModal').classList.add('active');
       state.huddleState.active = true;
@@ -1761,9 +1774,119 @@
       } catch (err) {
         console.log('WebRTC Camera preview fallback active');
       }
+
+      if (state.huddleState.autoRecord) {
+        startAutoRecording();
+      }
+    }
+
+    function toggleAutoRecording() {
+      state.huddleState.autoRecord = !state.huddleState.autoRecord;
+      const btn = document.getElementById('recToggleBtn');
+      if (btn) {
+        btn.innerText = state.huddleState.autoRecord ? '🔴 Auto-REC (ON)' : '⏺️ Auto-REC (OFF)';
+      }
+      if (state.huddleState.active) {
+        if (state.huddleState.autoRecord && !state.huddleState.isRecording) {
+          startAutoRecording();
+        } else if (!state.huddleState.autoRecord && state.huddleState.isRecording) {
+          stopAutoRecording(false);
+        }
+      }
+      showToast(state.huddleState.autoRecord ? '🔴 Auto Video Recording Enabled' : '⏺️ Auto Video Recording Disabled');
+    }
+
+    function startAutoRecording() {
+      if (state.huddleState.isRecording) return;
+      state.huddleState.isRecording = true;
+      state.huddleState.recordedChunks = [];
+      state.huddleState.recSeconds = 0;
+
+      const indicator = document.getElementById('recordingIndicator');
+      if (indicator) indicator.style.display = 'inline-flex';
+
+      const timerText = document.getElementById('recordingTimerText');
+      if (timerText) timerText.innerText = '🔴 REC 00:00';
+
+      state.huddleState.recTimerId = setInterval(() => {
+        state.huddleState.recSeconds++;
+        if (timerText) {
+          const mins = String(Math.floor(state.huddleState.recSeconds / 60)).padStart(2, '0');
+          const secs = String(state.huddleState.recSeconds % 60).padStart(2, '0');
+          timerText.innerText = `🔴 REC ${mins}:${secs}`;
+        }
+      }, 1000);
+
+      try {
+        const targetStream = state.huddleState.screenStream || state.huddleState.mediaStream;
+        if (targetStream && window.MediaRecorder) {
+          state.huddleState.mediaRecorder = new MediaRecorder(targetStream);
+          state.huddleState.mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) state.huddleState.recordedChunks.push(e.data);
+          };
+          state.huddleState.mediaRecorder.start(1000);
+        }
+      } catch (err) {
+        console.log('MediaRecorder fallback active for simulated canvas stream');
+      }
+
+      showToast('🔴 Automated Huddle Video Recording Started');
+    }
+
+    function stopAutoRecording(saveToStream = true) {
+      if (!state.huddleState.isRecording) return;
+      state.huddleState.isRecording = false;
+
+      if (state.huddleState.recTimerId) {
+        clearInterval(state.huddleState.recTimerId);
+        state.huddleState.recTimerId = null;
+      }
+
+      const indicator = document.getElementById('recordingIndicator');
+      if (indicator) indicator.style.display = 'none';
+
+      if (state.huddleState.mediaRecorder && state.huddleState.mediaRecorder.state !== 'inactive') {
+        state.huddleState.mediaRecorder.stop();
+        state.huddleState.mediaRecorder = null;
+      }
+
+      const recMins = String(Math.floor(state.huddleState.recSeconds / 60)).padStart(2, '0');
+      const recSecs = String(state.huddleState.recSeconds % 60).padStart(2, '0');
+      const durationStr = `${recMins}:${recSecs}`;
+
+      if (saveToStream && state.huddleState.recSeconds > 0) {
+        const dummyBlob = new Blob(state.huddleState.recordedChunks.length > 0 ? state.huddleState.recordedChunks : ['UE5_HUDDLE_VIDEO_DATA'], { type: 'video/webm' });
+        const downloadUrl = URL.createObjectURL(dummyBlob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `UE5_Huddle_Video_Recording_${Date.now()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        const recMsg = {
+          id: 'rec_' + Date.now(),
+          author: 'Slack Huddle Recorder Bot',
+          badge: 'AUTO RECORDER 📹',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: `📹 **AUTOMATED HUDDLE VIDEO RECORDING SAVED** [Duration: ${durationStr}]`,
+          attachments: [`UE5_Huddle_Video_Recording_${Date.now()}.webm (${(state.huddleState.recSeconds * 0.35).toFixed(1)} MB)`],
+          reactions: { '📹': 9, '💾': 14 },
+          repliesCount: 0
+        };
+
+        if (!state.messages[state.currentChannelId]) state.messages[state.currentChannelId] = [];
+        state.messages[state.currentChannelId].unshift(recMsg);
+        renderMessages();
+
+        showToast(`💾 Recording saved & downloaded (${durationStr})!`);
+      }
     }
 
     function endVideoHuddle() {
+      if (state.huddleState.isRecording) {
+        stopAutoRecording(true);
+      }
       if (state.huddleState.mediaStream) {
         state.huddleState.mediaStream.getTracks().forEach(track => track.stop());
         state.huddleState.mediaStream = null;
