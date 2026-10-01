@@ -1005,9 +1005,6 @@
           <div class="channel-item" id="item-dm-alex" onclick="switchChannel('dm-alex', '💬 Alex Rivera (Physics Dev)', 'Unreal C++ locomotion & PhysX collision chat')">
             <span class="dm-status-dot online"></span> <span>Alex Rivera</span>
           </div>
-          <div class="channel-item" id="item-dm-sarah" onclick="switchChannel('dm-sarah', '💬 Sarah Miller (QA Lead)', 'Playtest feedback triage & crash dump logs')">
-            <span class="dm-status-dot online"></span> <span>Sarah Miller</span>
-          </div>
         </div>
 
         <!-- 3. Webhooks & Workstation Apps -->
@@ -1154,7 +1151,7 @@
           <div class="kanban-card" onclick="showToast('Trello Card Details Opened')">
             <span class="kanban-tag trello">TRELLO CARD</span>
             <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">FMOD 3D Spatial audio ambient triggers</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@sarah.miller</b></div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>@alex.rivera</b></div>
           </div>
         </div>
 
@@ -1198,7 +1195,7 @@
         <div class="video-tile">
           <div style="font-size: 2.2rem; margin-bottom: 6px;">🖥️</div>
           <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent2);">UE5 Editor — Level 3 Cave</div>
-          <div class="video-overlay-name"><span class="status-dot"></span><span>Sarah Miller (Screen Share)</span></div>
+          <div class="video-overlay-name"><span class="status-dot"></span><span>Alex Rivera (Screen Share)</span></div>
         </div>
       </div>
 
@@ -1410,8 +1407,7 @@
         'art-assets': { name: '🎨 #art-assets', desc: 'Nanite 3D meshes, Lumen lighting & sound assets' },
         'bugs': { name: '🐛 #bugs', desc: 'Tracked playtest bug reports, logs, and stack trace dumps' },
         'dm-danila': { name: '💬 Danila Viier', desc: 'Direct message thread with Danila Viier (Lead Architect)' },
-        'dm-alex': { name: '💬 Alex Rivera', desc: 'Direct message thread with Alex Rivera (Physics Dev)' },
-        'dm-sarah': { name: '💬 Sarah Miller', desc: 'Direct message thread with Sarah Miller (QA Lead)' }
+        'dm-alex': { name: '💬 Alex Rivera', desc: 'Direct message thread with Alex Rivera (Physics Dev)' }
       },
       messages: {
         'announcements': [
@@ -1527,8 +1523,8 @@
         'bugs': [
           {
             id: 'm5',
-            author: 'Sarah Miller',
-            badge: 'QA LEAD 🐛',
+            author: 'Playtest Bot',
+            badge: 'QA AUTOMATION 🐛',
             time: '11:30 AM',
             text: '🚨 **NEW PLAYTEST BUG SUBMITTED [BUG-2026-0891]**',
             isBug: true,
@@ -1537,7 +1533,7 @@
               title: 'Fatal Error: Access Violation in CharacterMovementComponent.cpp on slope sprint',
               severity: '🔴 BLOCKER',
               build: 'v5.4.2-Win64-B1492',
-              reporter: 'Sarah Miller',
+              reporter: 'QA Team',
               logFile: 'UnrealEngine_CrashDump_2026.log'
             },
             reactions: { '🚨': 8 },
@@ -1565,17 +1561,6 @@
             reactions: { '🚀': 1 },
             repliesCount: 0
           }
-        ],
-        'dm-sarah': [
-          {
-            id: 'm_dm3',
-            author: 'Sarah Miller',
-            badge: 'QA LEAD',
-            time: '11:32 AM',
-            text: 'Hi Danila, I just submitted BUG-2026-0891 to #bugs with full log dump attached.',
-            reactions: { '👀': 1 },
-            repliesCount: 0
-          }
         ]
       },
       threads: {
@@ -1583,7 +1568,7 @@
           { author: 'Alex Rivera', time: '09:05 AM', text: 'Perforce submit changelist #49281 ready for review!' }
         ],
         'm4': [
-          { author: 'Sarah Miller', time: '11:02 AM', text: 'Downloaded Windows Standalone zip. Starting playtest now!' }
+          { author: 'Alex Rivera', time: '11:02 AM', text: 'Downloaded Windows Standalone zip. Starting playtest now!' }
         ]
       },
       activeThreadMsgId: null
