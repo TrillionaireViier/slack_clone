@@ -513,8 +513,7 @@
 
     /* ── Trello & Jira Workstation Kanban Styling ── */
     .kanban-board-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
       gap: 12px;
       margin-top: 14px;
       overflow-x: auto;
@@ -527,7 +526,9 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      flex: 1;
       min-width: 220px;
+      transition: transform 0.2s, opacity 0.2s;
     }
     .kanban-col-header {
       font-size: 0.82rem;
@@ -540,6 +541,17 @@
       justify-content: space-between;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .kanban-col-header:hover {
+      color: var(--accent2);
+    }
+    .kanban-col.dragging-col {
+      opacity: 0.4;
+      transform: scale(0.97);
+      border: 2px dashed var(--accent2);
     }
     .kanban-card {
       background: var(--surface2);
@@ -3059,6 +3071,129 @@
       initKanbanDragAndDrop();
     }
 
+    // ── KANBAN COLUMN DRAG & DROP HANDLERS (Make columns movable) ──
+    let draggedKanbanCol = null;
+
+    function handleColDragStart(e) {
+      if (e.target.closest('.kanban-card')) return;
+      const col = e.currentTarget.closest('.kanban-col');
+      if (!col) return;
+      draggedKanbanCol = col;
+      col.classList.add('dragging-col');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', 'column'); } catch(err) {}
+      }
+    }
+
+    function handleColDragEnd(e) {
+      if (draggedKanbanCol) {
+        draggedKanbanCol.classList.remove('dragging-col');
+        draggedKanbanCol = null;
+      }
+      document.querySelectorAll('.kanban-col').forEach(col => col.classList.remove('dragging-col'));
+    }
+
+    function handleColDragOver(e) {
+      if (!draggedKanbanCol) return;
+      e.preventDefault();
+      const targetCol = e.currentTarget.closest('.kanban-col');
+      if (targetCol && targetCol !== draggedKanbanCol && targetCol.parentElement === draggedKanbanCol.parentElement) {
+        const container = targetCol.parentElement;
+        const children = Array.from(container.children);
+        const draggedIndex = children.indexOf(draggedKanbanCol);
+        const targetIndex = children.indexOf(targetCol);
+
+        if (draggedIndex < targetIndex) {
+          container.insertBefore(draggedKanbanCol, targetCol.nextSibling);
+        } else {
+          container.insertBefore(draggedKanbanCol, targetCol);
+        }
+      }
+    }
+
+    let touchCol = null;
+    let touchColStartPos = { x: 0, y: 0 };
+    let isTouchColDragging = false;
+
+    function handleColTouchStart(e) {
+      if (e.target.closest('.kanban-card')) return;
+      const header = e.currentTarget;
+      const col = header.closest('.kanban-col');
+      if (!col) return;
+      touchCol = col;
+
+      const touch = e.touches[0];
+      touchColStartPos = { x: touch.clientX, y: touch.clientY };
+      isTouchColDragging = false;
+
+      header.addEventListener('touchmove', handleColTouchMove, { passive: false });
+      header.addEventListener('touchend', handleColTouchEnd);
+    }
+
+    function handleColTouchMove(e) {
+      if (!touchCol) return;
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchColStartPos.x);
+      const dy = Math.abs(touch.clientY - touchColStartPos.y);
+
+      if (!isTouchColDragging && dx > 10) {
+        isTouchColDragging = true;
+        touchCol.classList.add('dragging-col');
+      }
+
+      if (isTouchColDragging) {
+        e.preventDefault();
+        const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetCol = targetEl ? targetEl.closest('.kanban-col') : null;
+        if (targetCol && targetCol !== touchCol && targetCol.parentElement === touchCol.parentElement) {
+          const container = targetCol.parentElement;
+          const children = Array.from(container.children);
+          const draggedIndex = children.indexOf(touchCol);
+          const targetIndex = children.indexOf(targetCol);
+
+          if (draggedIndex < targetIndex) {
+            container.insertBefore(touchCol, targetCol.nextSibling);
+          } else {
+            container.insertBefore(touchCol, targetCol);
+          }
+        }
+      }
+    }
+
+    function handleColTouchEnd(e) {
+      if (touchCol) {
+        touchCol.classList.remove('dragging-col');
+        const header = touchCol.querySelector('.kanban-col-header');
+        if (header) {
+          header.removeEventListener('touchmove', handleColTouchMove);
+          header.removeEventListener('touchend', handleColTouchEnd);
+        }
+      }
+      touchCol = null;
+      isTouchColDragging = false;
+    }
+
+    function initKanbanColumnDragging() {
+      document.querySelectorAll('.kanban-col').forEach(col => {
+        const header = col.querySelector('.kanban-col-header');
+        if (header) {
+          header.setAttribute('draggable', 'true');
+          header.title = '🖐️ Hold & drag column header to re-order';
+          header.removeEventListener('dragstart', handleColDragStart);
+          header.removeEventListener('dragend', handleColDragEnd);
+          header.addEventListener('dragstart', handleColDragStart);
+          header.addEventListener('dragend', handleColDragEnd);
+
+          header.removeEventListener('touchstart', handleColTouchStart);
+          header.addEventListener('touchstart', handleColTouchStart, { passive: true });
+        }
+
+        col.removeEventListener('dragover', handleColDragOver);
+        col.addEventListener('dragover', handleColDragOver);
+      });
+    }
+
     function initKanbanDragAndDrop() {
       document.querySelectorAll('.kanban-card').forEach(card => {
         card.setAttribute('draggable', 'true');
@@ -3079,6 +3214,8 @@
         list.addEventListener('dragleave', handleKanbanDragLeave);
         list.addEventListener('drop', handleKanbanDrop);
       });
+
+      initKanbanColumnDragging();
     }
 
     function initFileDragAndDrop() {
