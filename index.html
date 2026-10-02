@@ -2598,8 +2598,8 @@
         targetCol.prepend(cardDiv);
       }
 
-      // Update Column Count Badges
-      updateKanbanCounts();
+      // Sync modal board changes to inline subpage board & update counts
+      syncInlineFromModal();
 
       // 2. Add Feed Message to #trello-jira-board channel
       const jiraMsg = {
@@ -2629,8 +2629,20 @@
       document.getElementById('editJiraTitleInput').value = title || 'C++ Locomotion physics optimization';
       document.getElementById('editJiraTagBadge').innerText = ticketId ? ticketId : 'JIRA ISSUE';
 
+      // Detect current status column dynamically from element's actual parent column
+      let actualColId = colId || 'todoCardList';
+      if (el && el.parentElement && el.parentElement.id) {
+        let parentId = el.parentElement.id;
+        if (parentId.startsWith('inline')) {
+          let raw = parentId.replace('inline', '');
+          actualColId = raw.charAt(0).toLowerCase() + raw.slice(1);
+        } else {
+          actualColId = parentId;
+        }
+      }
+
       const statusSelect = document.getElementById('editJiraStatusInput');
-      if (colId && statusSelect) statusSelect.value = colId;
+      if (statusSelect) statusSelect.value = actualColId;
 
       const prioritySelect = document.getElementById('editJiraPriorityInput');
       if (priority && prioritySelect) {
@@ -2679,12 +2691,22 @@
           <div style="font-size: 0.88rem; font-weight: 700; margin: 6px 0;">${escapeHtml(title)}</div>
           <div style="font-size: 0.75rem; color: var(--text-dim);">Assignee: <b>${assignee}</b> | Priority: <b style="color: #ff6b81;">${priority}</b></div>
         `;
-        activeEditingCardElement.setAttribute('onclick', `openEditJiraCardModal('${ticketId}', '${escapeHtml(title)}', '${assignee}', '${priority}', '${colId}', this)`);
 
-        // Move to target column if changed
-        const targetColList = document.getElementById(colId);
+        // Determine target column list element depending on whether activeEditingCardElement is in inline board or modal board
+        const isInline = activeEditingCardElement.parentElement && activeEditingCardElement.parentElement.id.startsWith('inline');
+        const targetColId = isInline ? ('inline' + colId.charAt(0).toUpperCase() + colId.slice(1)) : colId;
+
+        const targetColList = document.getElementById(targetColId) || document.getElementById(colId);
         if (targetColList && activeEditingCardElement.parentElement !== targetColList) {
           targetColList.prepend(activeEditingCardElement);
+        }
+
+        activeEditingCardElement.setAttribute('onclick', `openEditJiraCardModal('${ticketId}', '${escapeHtml(title)}', '${assignee}', '${priority}', '${colId}', this)`);
+
+        if (isInline) {
+          syncModalFromInline();
+        } else {
+          syncInlineFromModal();
         }
       }
 
@@ -2696,7 +2718,7 @@
         author: 'Jira Software Bot',
         badge: 'JIRA CLOUD 🎯',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: `✏️ **CARD UPDATED [${ticketId}]**: ${title}\n*Assignee*: ${assignee} | *Priority*: ${priority}`,
+        text: `✏️ **CARD UPDATED [${ticketId}]**: ${title}\n*Assignee*: ${assignee} | *Status*: ${colId.replace('CardList','')} | *Priority*: ${priority}`,
         reactions: { '⚡': 2 },
         repliesCount: 0
       };
@@ -2711,7 +2733,13 @@
     function deleteJiraCardCurrent() {
       const ticketId = document.getElementById('editJiraCardIdInput').value;
       if (activeEditingCardElement) {
+        const isInline = activeEditingCardElement.parentElement && activeEditingCardElement.parentElement.id.startsWith('inline');
         activeEditingCardElement.remove();
+        if (isInline) {
+          syncModalFromInline();
+        } else {
+          syncInlineFromModal();
+        }
       }
       updateKanbanCounts();
       closeEditJiraCardModal();
