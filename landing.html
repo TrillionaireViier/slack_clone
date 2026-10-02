@@ -3450,14 +3450,16 @@
     }
 
     function performUserSignIn() {
-      const email = document.getElementById('userLoginEmail').value.trim();
-      const pass = document.getElementById('userLoginPass').value.trim();
+      const emailEl = document.getElementById('userLoginEmail');
+      const passEl = document.getElementById('userLoginPass');
+      const email = emailEl ? emailEl.value.trim() : '';
+      const pass = passEl ? passEl.value.trim() : '';
       if (!pass) {
         showToast('❌ Password required for sign in.');
         return;
       }
-      const name = email.split('@')[0] || 'Developer';
-      const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+      const rawName = email.split('@')[0] || 'Developer';
+      const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
       state.currentUser = {
         name: formattedName,
         role: 'Engineering Lead',
@@ -3465,45 +3467,75 @@
         email: email,
         signedIn: true
       };
-      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      try {
+        localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      } catch(e) {}
       updateAuthUI();
       closeUserAuthModal();
-      showToast(`🔑 Signed in successfully as ${state.currentUser.name}!`);
+      showToast('🔑 Signed in successfully as ' + state.currentUser.name + '!');
     }
 
     function performUserSignUp() {
-      const name = document.getElementById('signUpName').value.trim() || 'New Developer';
-      const role = document.getElementById('signUpRole').value.trim() || 'QA Engineer';
-      const pass = document.getElementById('signUpPass').value.trim();
-      const email = document.getElementById('signUpEmail').value.trim() || 'dev@gamestudio.internal';
+      const nameEl = document.getElementById('signUpName');
+      const roleEl = document.getElementById('signUpRole');
+      const passEl = document.getElementById('signUpPass');
+      const emailEl = document.getElementById('signUpEmail');
+
+      const name = nameEl ? nameEl.value.trim() || 'New Developer' : 'New Developer';
+      const role = roleEl ? roleEl.value.trim() || 'QA Engineer' : 'QA Engineer';
+      const pass = passEl ? passEl.value.trim() : '';
+      const email = emailEl ? emailEl.value.trim() || 'dev@gamestudio.internal' : 'dev@gamestudio.internal';
+
       if (!pass) {
         showToast('❌ Please create a password for registration.');
         return;
       }
-      state.currentUser = { name, role, badge: role.toUpperCase(), email, signedIn: true };
-      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+
+      state.currentUser = {
+        name: name,
+        role: role,
+        badge: role.toUpperCase(),
+        email: email,
+        signedIn: true
+      };
+
+      try {
+        localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      } catch(e) {}
+
       updateAuthUI();
       closeUserAuthModal();
-      showToast(`🎉 Account created! Signed in as ${name}.`);
+      showToast('🎉 Account created! Signed in as ' + name + '.');
     }
 
     function performSignOut() {
-      state.currentUser = { name: 'Guest Developer', role: 'Signed Out', badge: 'GUEST', email: '', signedIn: false };
-      localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      state.currentUser = {
+        name: 'Guest Developer',
+        role: 'Signed Out',
+        badge: 'GUEST',
+        email: '',
+        signedIn: false
+      };
+      try {
+        localStorage.setItem('slack_clone_user_session', JSON.stringify(state.currentUser));
+      } catch(e) {}
       updateAuthUI();
       showToast('🚪 Signed out of workspace session.');
     }
 
     function showToast(msg) {
       const container = document.getElementById('toastContainer');
+      if (!container) return;
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `<span>⚡</span> <span>${msg}</span>`;
+      toast.innerHTML = '<span>⚡</span> <span>' + msg + '</span>';
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(() => {
+          try { toast.remove(); } catch(e) {}
+        }, 300);
       }, 3500);
     }
   </script>
