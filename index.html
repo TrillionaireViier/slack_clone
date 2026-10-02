@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Slack Clone — Game Studio Architecture, UE5 CI/CD, Trello/Jira Workstation & Video Huddles</title>
   <meta name="description" content="A specialized Slack Clone designed for Unreal Engine 5 game studios featuring clean channel architecture, automated packaging alerts, version control webhooks, Trello/Jira Kanban workstations, and video huddles." />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1051,6 +1054,29 @@
       </div>
 
       <div class="sidebar-scroll">
+
+        <!-- 0. Prominent Studio Subpages & Workstations Navigation -->
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">
+            <span>Studio Subpages</span>
+            <span style="font-size: 0.68rem; color: var(--accent2); background: rgba(0, 212, 170, 0.15); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(0, 212, 170, 0.3);">SUBPAGES</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item active" id="sideSubtabChat" onclick="switchSubpageTab('chat')">
+            <span>💬</span> <span>Messages Stream</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item" id="sideSubtabJira" onclick="switchSubpageTab('jira')">
+            <span>📋</span> <span>Trello & Jira Workstation</span> <span class="unread-pill" style="background: #0052cc;">LIVE</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item" id="sideSubtabBuilds" onclick="switchSubpageTab('builds')">
+            <span>📦</span> <span>UE5 Packaging CI/CD</span> <span class="unread-pill" style="background: var(--accent2); color: #000;">32 NODES</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item" id="sideSubtabFiles" onclick="switchSubpageTab('files')">
+            <span>📁</span> <span>Shared Files & Logs</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item" id="sideSubtabTeam" onclick="switchSubpageTab('team')">
+            <span>👥</span> <span>Core Engineers Roster</span>
+          </div>
+        </div>
 
         <!-- 1. Distraction-Free Studio Channels -->
         <div class="sidebar-section">
@@ -2491,29 +2517,33 @@
       const activeTab = document.getElementById('subtab' + tab.charAt(0).toUpperCase() + tab.slice(1));
       if (activeTab) activeTab.classList.add('active');
 
+      document.querySelectorAll('.subpage-sidebar-item').forEach(el => el.classList.remove('active'));
+      const activeSideTab = document.getElementById('sideSubtab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+      if (activeSideTab) activeSideTab.classList.add('active');
+
       document.querySelectorAll('.subpage-view').forEach(el => el.style.display = 'none');
       const composer = document.querySelector('.composer-wrapper');
 
       if (tab === 'chat') {
         document.getElementById('messageStream').style.display = 'flex';
         if (composer) composer.style.display = 'block';
-        showToast('💬 Switched to Messages Stream');
+        showToast('💬 Switched to Messages Stream Subpage');
       } else if (tab === 'jira') {
         document.getElementById('jiraWorkstationSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
-        showToast('📋 Switched to Trello & Jira Workstation Subpage View');
+        showToast('📋 Switched to Trello & Jira Workstation Subpage');
       } else if (tab === 'builds') {
         document.getElementById('buildsCiCdSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
-        showToast('📦 Switched to UE5 Packaging & CI/CD Subpage View');
+        showToast('📦 Switched to UE5 Packaging & CI/CD Subpage');
       } else if (tab === 'files') {
         document.getElementById('sharedFilesSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
-        showToast('📁 Switched to Shared Log Files & Build Artifacts View');
+        showToast('📁 Switched to Shared Log Files & Build Artifacts Subpage');
       } else if (tab === 'team') {
         document.getElementById('teamRosterSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
-        showToast('👥 Switched to Core Studio Engineers Roster View');
+        showToast('👥 Switched to Core Studio Engineers Roster Subpage');
       }
     }
 
