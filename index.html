@@ -2187,6 +2187,9 @@
       selectedComposerAttachment: null,
       selectedBugFile: 'UnrealEngine_Playtest_CrashDump_2026.log',
       channels: {
+        'town-square': { name: '📢 #town-square', desc: 'Mattermost default workspace channel for studio-wide announcements & sync' },
+        'off-topic': { name: '💬 #off-topic', desc: 'Mattermost default casual discussion & studio chat' },
+        'incident-playbooks': { name: '🏃 #incident-playbooks', desc: 'Mattermost Playbooks & Incident Response active runs' },
         'announcements': { name: '📢 #announcements', desc: 'Studio milestone announcements and release targets' },
         'code-updates': { name: '💻 #code-updates', desc: 'Perforce submit alerts & GitHub C++ pull requests' },
         'trello-jira-board': { name: '📋 #trello-jira-board', desc: 'Interactive Trello Workstation Kanban & Jira Sprint issue tracker' },
@@ -2201,6 +2204,39 @@
         'dm-elena': { name: '💬 Elena Rostova', desc: 'Direct message thread with Elena Rostova (Lead Technical Artist)' }
       },
       messages: {
+        'town-square': [
+          {
+            id: 'm_ts1',
+            author: 'Mattermost Workspace Sync Bot',
+            badge: 'MATTERMOST BOT 🌀',
+            time: '08:00 AM',
+            text: '🌀 **WELCOME TO MATTERMOST TOWN SQUARE!**\nThis is the default public channel for all core engineers, technical artists, and release leads. Try running Mattermost slash commands like `/header [text]`, `/purpose [text]`, `/jira create [title]`, or `/status [status]`.',
+            reactions: { '🌀': 15, '👋': 10 },
+            repliesCount: 0
+          }
+        ],
+        'off-topic': [
+          {
+            id: 'm_off1',
+            author: 'Alex Rivera',
+            badge: 'PHYSICS DEV',
+            time: '09:15 AM',
+            text: '☕ Anyone up for a quick virtual coffee break before the UE5 Standalone Win64 build test run?',
+            reactions: { '☕': 8, '👍': 4 },
+            repliesCount: 1
+          }
+        ],
+        'incident-playbooks': [
+          {
+            id: 'm_pb1',
+            author: 'Mattermost Playbooks Engine',
+            badge: 'PLAYBOOKS 🏃',
+            time: '09:45 AM',
+            text: '🏃 **ACTIVE RUN: UE5 Shader Precompilation Stalls**\n- Owner: `@sophia.chen`\n- Status: In Progress\n- Checklists: 3/4 tasks completed.',
+            reactions: { '⚡': 7 },
+            repliesCount: 0
+          }
+        ],
         'announcements': [
           {
             id: 'm_sec_policy',
@@ -2700,10 +2736,75 @@
       closeDeleteChannelModal();
     }
 
+    function parseMattermostSlashCommand(text) {
+      if (!text.startsWith('/')) return false;
+
+      const parts = text.slice(1).split(' ');
+      const cmd = parts[0].toLowerCase();
+      const arg = parts.slice(1).join(' ').trim();
+
+      if (cmd === 'header' || cmd === 'purpose') {
+        if (arg) {
+          if (state.channels[state.currentChannelId]) state.channels[state.currentChannelId].desc = arg;
+          const descEl = document.getElementById('currentChannelDesc');
+          if (descEl) descEl.innerText = arg;
+          showToast(`⚡ Mattermost Command: Updated channel header to "${arg}"`);
+        }
+        return true;
+      } else if (cmd === 'status') {
+        if (arg && typeof timeTrackerState !== 'undefined') {
+          timeTrackerState.mattermostStatus = arg;
+          const label = document.getElementById('mattermostStatusLabel');
+          if (label) label.innerText = arg;
+          showToast(`💬 Mattermost Status Updated to: ${arg}`);
+        }
+        return true;
+      } else if (cmd === 'jira' && parts[1] === 'create') {
+        const title = parts.slice(2).join(' ').trim() || 'New task from Mattermost command';
+        const ticketId = 'JIRA UE5-' + Math.floor(1000 + Math.random() * 9000);
+        const list = document.getElementById('todoCardList') || document.getElementById('inlineTodoCardList');
+        if (list) {
+          const cardDiv = document.createElement('div');
+          cardDiv.className = 'kanban-card';
+          cardDiv.setAttribute('draggable', 'true');
+          cardDiv.setAttribute('onclick', `openEditJiraCardModal('${ticketId}', '${escapeHtml(title)}', '@${escapeHtml(state.currentUser.name)}', 'High 🟧', '${list.id}', this)`);
+          cardDiv.innerHTML = `
+            <div class="kanban-card-title">${escapeHtml(title)}</div>
+            <div class="kanban-card-footer">
+              <span class="kanban-tag jira">${ticketId}</span>
+              <span class="kanban-assignee">@${escapeHtml(state.currentUser.name)}</span>
+            </div>
+          `;
+          list.appendChild(cardDiv);
+          if (typeof initKanbanDragAndDrop === 'function') initKanbanDragAndDrop();
+          if (typeof updateKanbanCounts === 'function') updateKanbanCounts();
+          showToast(`🎯 Created Jira Ticket [${ticketId}] via Mattermost Command!`);
+        }
+        return true;
+      } else if (cmd === 'timer') {
+        if (parts[1] === 'start' && typeof toggleLiveTimer === 'function') {
+          if (!timeTrackerState.isRunning) toggleLiveTimer();
+        } else if (parts[1] === 'stop' && typeof stopAndLogTimer === 'function') {
+          stopAndLogTimer();
+        }
+        return true;
+      } else if (cmd === 'help') {
+        showToast('🌀 Commands: /header [text], /purpose [text], /status [text], /jira create [title], /timer start, /timer stop');
+        return true;
+      }
+
+      return false;
+    }
+
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const text = input.value.trim();
       if (!text && !state.selectedComposerAttachment) return;
+
+      if (parseMattermostSlashCommand(text)) {
+        input.value = '';
+        return;
+      }
 
       const newMsg = {
         id: 'msg_' + Date.now(),
