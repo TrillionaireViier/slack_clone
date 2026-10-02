@@ -1129,13 +1129,16 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">
             <span>Studio Subpages</span>
-            <span style="font-size: 0.68rem; color: var(--accent2); background: rgba(0, 212, 170, 0.15); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(0, 212, 170, 0.3);">8 SUBPAGES</span>
+            <span style="font-size: 0.68rem; color: var(--accent2); background: rgba(0, 212, 170, 0.15); padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(0, 212, 170, 0.3);">9 SUBPAGES</span>
           </div>
           <div class="channel-item subpage-sidebar-item active" id="sideSubtabChat" onclick="switchSubpageTab('chat')">
             <span>💬</span> <span>Messages Stream</span>
           </div>
           <div class="channel-item subpage-sidebar-item" id="sideSubtabJira" onclick="switchSubpageTab('jira')">
             <span>📋</span> <span>Trello & Jira Workstation</span> <span class="unread-pill" style="background: #0052cc;">LIVE</span>
+          </div>
+          <div class="channel-item subpage-sidebar-item" id="sideSubtabTimer" onclick="switchSubpageTab('timer')">
+            <span>⏱️</span> <span>Studio Time Tracker</span> <span class="unread-pill" style="background: var(--accent2); color: #000;" id="timerSidebarPill">00:00:00</span>
           </div>
           <div class="channel-item subpage-sidebar-item" id="sideSubtabBuilds" onclick="switchSubpageTab('builds')">
             <span>📦</span> <span>UE5 Packaging CI/CD</span> <span class="unread-pill" style="background: var(--accent2); color: #000;">32 NODES</span>
@@ -1243,6 +1246,7 @@
       <div class="subpage-nav-bar">
         <div class="subpage-tab active" id="subtabChat" onclick="switchSubpageTab('chat')">💬 Messages Stream</div>
         <div class="subpage-tab" id="subtabJira" onclick="switchSubpageTab('jira')">📋 Trello & Jira Workstation</div>
+        <div class="subpage-tab" id="subtabTimer" onclick="switchSubpageTab('timer')">⏱️ Time Tracker & Mattermost</div>
         <div class="subpage-tab" id="subtabBuilds" onclick="switchSubpageTab('builds')">📦 UE5 Packaging & CI/CD</div>
         <div class="subpage-tab" id="subtabFiles" onclick="switchSubpageTab('files')">📁 Shared Files & Log Artifacts</div>
         <div class="subpage-tab" id="subtabTeam" onclick="switchSubpageTab('team')">👥 Core Engineers Roster</div>
@@ -1353,6 +1357,118 @@
           </div>
         </div>
         </div>
+      </div>
+
+      <!-- Subpage 3: Studio Time Tracker & Mattermost Integration View -->
+      <div class="subpage-view" id="timerWorkstationSubpage" style="display: none; flex: 1; overflow-y: auto; padding: 24px; background: var(--bg-dark);">
+        <!-- Header Banner -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: linear-gradient(135deg, rgba(0, 212, 170, 0.15), rgba(124, 92, 255, 0.15)); padding: 20px; border-radius: 12px; border: 1px solid var(--accent2);">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px;">
+              <span>⏱️</span> Studio Time Tracker & Mattermost Workspace Sync
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 4px;">
+              Track C++ development time, log Jira ticket hours, export billable reports, and sync active Mattermost developer status.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-sm" onclick="exportTimeLogsCsv()" title="Export CSV Report">📊 Export CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="openManualTimeLogModal()">➕ Log Past Hours</button>
+          </div>
+        </div>
+
+        <!-- Live Stopwatch Timer Card -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between;">
+            
+            <div style="flex: 1; min-width: 280px;">
+              <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--accent2); letter-spacing: 0.5px; margin-bottom: 6px;">Active Task Tracking</div>
+              <input type="text" id="activeTimerTaskInput" placeholder="What are you working on? (e.g. JIRA UE5-4921: C++ Locomotion physics)" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: #fff; padding: 12px 14px; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px;">
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="activeTimerProjectSelect" style="background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">
+                  <option value="Unreal Engine 5 Core">Unreal Engine 5 Core</option>
+                  <option value="Cyberpunk RPG Engine">Cyberpunk RPG Engine</option>
+                  <option value="Race Master Simulator">Race Master Simulator</option>
+                  <option value="Deep Space VR">Deep Space VR</option>
+                  <option value="Mattermost Infrastructure">Mattermost Infrastructure</option>
+                </select>
+                <label style="font-size: 0.82rem; color: var(--text-dim); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="activeTimerBillableCheck" checked style="accent-color: var(--accent2);"> Billable Hour
+                </label>
+              </div>
+            </div>
+
+            <!-- Digital Timer Counter Display -->
+            <div style="text-align: center; background: rgba(0,0,0,0.4); padding: 16px 28px; border-radius: 12px; border: 1px solid rgba(0,212,170,0.3); min-width: 200px;">
+              <div id="liveTimerDisplay" style="font-family: 'JetBrains Mono', monospace; font-size: 2.4rem; font-weight: 800; color: var(--accent2); text-shadow: 0 0 12px rgba(0,212,170,0.5);">00:00:00</div>
+              <div id="liveTimerStatusText" style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; font-weight: 600;">STOPPED</div>
+            </div>
+
+            <!-- Controls -->
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn btn-primary" id="btnStartTimer" onclick="toggleLiveTimer()" style="padding: 12px 20px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span id="timerBtnIcon">▶️</span> <span id="timerBtnText">Start Timer</span>
+              </button>
+              <button class="btn btn-danger" onclick="stopAndLogTimer()" style="padding: 12px 18px; font-weight: 700;">⏹️ Log Session</button>
+              <button class="btn" onclick="resetLiveTimer()" style="padding: 12px 14px;" title="Reset Timer">🔄</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Metric Stat Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Today Total Logged</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-top: 4px;" id="statTodayLogged">6h 45m</div>
+            <div style="font-size: 0.75rem; color: var(--accent2); margin-top: 2px;">+1h 15m vs yesterday</div>
+          </div>
+          <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">This Week Logged</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent2); margin-top: 4px;" id="statWeekLogged">38h 12m</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">Target: 40h / week</div>
+          </div>
+          <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Mattermost Sync Status</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #4c9aff; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>🟢</span> <span id="mattermostStatusLabel">Online (In UE5 Editor)</span>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; cursor: pointer; text-decoration: underline;" onclick="changeMattermostStatus()">Change Status...</div>
+          </div>
+          <div style="background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Billable Ratio</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #00d4aa; margin-top: 4px;">94.2%</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">36h 00m billable</div>
+          </div>
+        </div>
+
+        <!-- Recent Time Logs List Table -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #fff;">📋 Recent Logged Time Entries</h3>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Sorted by latest timestamp</span>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 0.78rem; text-transform: uppercase;">
+                  <th style="padding: 10px;">Developer</th>
+                  <th style="padding: 10px;">Task / Ticket</th>
+                  <th style="padding: 10px;">Project</th>
+                  <th style="padding: 10px;">Time Range</th>
+                  <th style="padding: 10px;">Duration</th>
+                  <th style="padding: 10px;">Billable</th>
+                  <th style="padding: 10px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="timeLogsTableBody">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- Subpage 3: UE5 Automated Packaging & CI/CD Pipeline Subview -->
@@ -2709,6 +2825,11 @@
         document.getElementById('jiraWorkstationSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
         showToast('📋 Switched to Trello & Jira Workstation Subpage');
+      } else if (tab === 'timer') {
+        document.getElementById('timerWorkstationSubpage').style.display = 'block';
+        if (composer) composer.style.display = 'none';
+        renderTimeLogsTable();
+        showToast('⏱️ Switched to Studio Time Tracker Subpage');
       } else if (tab === 'builds') {
         document.getElementById('buildsCiCdSubpage').style.display = 'block';
         if (composer) composer.style.display = 'none';
@@ -4176,11 +4297,217 @@
       });
     }
 
+    // Studio Time Tracker & Mattermost Status Integration State
+    const timeTrackerState = {
+      seconds: 0,
+      isRunning: false,
+      intervalId: null,
+      todayLoggedSeconds: 24300,
+      weekLoggedSeconds: 137520,
+      mattermostStatus: 'Online (In UE5 Editor)',
+      logs: [
+        { id: 1, dev: '@danila', task: 'JIRA UE5-4921: C++ Locomotion physics crash debug', project: 'Unreal Engine 5 Core', timeRange: '11:00 AM - 01:15 PM', duration: '2h 15m', seconds: 8100, billable: true },
+        { id: 2, dev: '@alex.rivera', task: 'Lumen GI emissive lighting shaders implementation', project: 'Unreal Engine 5 Core', timeRange: '09:30 AM - 12:00 PM', duration: '2h 30m', seconds: 9000, billable: true },
+        { id: 3, dev: '@elena.rostova', task: 'Mattermost webhook notification bridge setup', project: 'Mattermost Infrastructure', timeRange: '08:00 AM - 10:00 AM', duration: '2h 00m', seconds: 7200, billable: false }
+      ]
+    };
+
+    function formatSeconds(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    }
+
+    function formatDurationText(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      return `${h}h ${m}m`;
+    }
+
+    function toggleLiveTimer() {
+      const btnText = document.getElementById('timerBtnText');
+      const btnIcon = document.getElementById('timerBtnIcon');
+      const statusText = document.getElementById('liveTimerStatusText');
+      const pill = document.getElementById('timerSidebarPill');
+
+      if (!timeTrackerState.isRunning) {
+        timeTrackerState.isRunning = true;
+        if (btnText) btnText.innerText = 'Pause Timer';
+        if (btnIcon) btnIcon.innerText = '⏸️';
+        if (statusText) { statusText.innerText = 'TRACKING IN PROGRESS'; statusText.style.color = 'var(--accent2)'; }
+
+        timeTrackerState.intervalId = setInterval(() => {
+          timeTrackerState.seconds++;
+          const formatted = formatSeconds(timeTrackerState.seconds);
+          const displayEl = document.getElementById('liveTimerDisplay');
+          if (displayEl) displayEl.innerText = formatted;
+          if (pill) pill.innerText = formatted;
+        }, 1000);
+
+        showToast('⏱️ Studio Time Tracker started!');
+      } else {
+        timeTrackerState.isRunning = false;
+        clearInterval(timeTrackerState.intervalId);
+        timeTrackerState.intervalId = null;
+        if (btnText) btnText.innerText = 'Resume Timer';
+        if (btnIcon) btnIcon.innerText = '▶️';
+        if (statusText) { statusText.innerText = 'PAUSED'; statusText.style.color = '#ffb703'; }
+        showToast('⏸️ Timer paused');
+      }
+    }
+
+    function stopAndLogTimer() {
+      if (timeTrackerState.seconds === 0) {
+        showToast('⚠️ No active duration to log.');
+        return;
+      }
+
+      if (timeTrackerState.isRunning) {
+        toggleLiveTimer();
+      }
+
+      const taskInput = document.getElementById('activeTimerTaskInput');
+      const projSelect = document.getElementById('activeTimerProjectSelect');
+      const billCheck = document.getElementById('activeTimerBillableCheck');
+
+      const taskName = taskInput && taskInput.value.trim() ? taskInput.value.trim() : 'Studio development sprint task';
+      const projName = projSelect ? projSelect.value : 'Unreal Engine 5 Core';
+      const isBillable = billCheck ? billCheck.checked : true;
+
+      const newLog = {
+        id: Date.now(),
+        dev: '@danila',
+        task: taskName,
+        project: projName,
+        timeRange: 'Just Now',
+        duration: formatDurationText(timeTrackerState.seconds),
+        seconds: timeTrackerState.seconds,
+        billable: isBillable
+      };
+
+      timeTrackerState.todayLoggedSeconds += timeTrackerState.seconds;
+      timeTrackerState.weekLoggedSeconds += timeTrackerState.seconds;
+      timeTrackerState.logs.unshift(newLog);
+
+      resetLiveTimer();
+      updateTimeTrackerStats();
+      renderTimeLogsTable();
+      showToast(`✅ Logged ${newLog.duration} to ${projName}!`);
+    }
+
+    function resetLiveTimer() {
+      if (timeTrackerState.isRunning) {
+        clearInterval(timeTrackerState.intervalId);
+        timeTrackerState.isRunning = false;
+      }
+      timeTrackerState.seconds = 0;
+      timeTrackerState.intervalId = null;
+
+      const displayEl = document.getElementById('liveTimerDisplay');
+      const statusText = document.getElementById('liveTimerStatusText');
+      const pill = document.getElementById('timerSidebarPill');
+      const btnText = document.getElementById('timerBtnText');
+      const btnIcon = document.getElementById('timerBtnIcon');
+
+      if (displayEl) displayEl.innerText = '00:00:00';
+      if (pill) pill.innerText = '00:00:00';
+      if (statusText) { statusText.innerText = 'STOPPED'; statusText.style.color = 'var(--text-dim)'; }
+      if (btnText) btnText.innerText = 'Start Timer';
+      if (btnIcon) btnIcon.innerText = '▶️';
+    }
+
+    function updateTimeTrackerStats() {
+      const todayEl = document.getElementById('statTodayLogged');
+      const weekEl = document.getElementById('statWeekLogged');
+      if (todayEl) todayEl.innerText = formatDurationText(timeTrackerState.todayLoggedSeconds);
+      if (weekEl) weekEl.innerText = formatDurationText(timeTrackerState.weekLoggedSeconds);
+    }
+
+    function renderTimeLogsTable() {
+      const tbody = document.getElementById('timeLogsTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = timeTrackerState.logs.map(log => `
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <td style="padding: 12px; font-weight: 700; color: var(--accent2);">${escapeHtml(log.dev)}</td>
+          <td style="padding: 12px; color: #fff; font-weight: 600;">${escapeHtml(log.task)}</td>
+          <td style="padding: 12px;"><span class="kanban-tag" style="background: rgba(76, 154, 255, 0.2); color: #4c9aff;">${escapeHtml(log.project)}</span></td>
+          <td style="padding: 12px; color: var(--text-dim);">${escapeHtml(log.timeRange)}</td>
+          <td style="padding: 12px; font-weight: 800; color: var(--accent2);">${escapeHtml(log.duration)}</td>
+          <td style="padding: 12px;">
+            <span style="font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; ${log.billable ? 'background: rgba(0, 212, 170, 0.2); color: #00d4aa;' : 'background: rgba(255, 255, 255, 0.1); color: var(--text-dim);'}">
+              ${log.billable ? 'Billable 🟢' : 'Internal R&D 🔵'}
+            </span>
+          </td>
+          <td style="padding: 12px; text-align: right;">
+            <button class="btn btn-sm btn-danger" onclick="deleteTimeLog(${log.id})" title="Delete Log">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function deleteTimeLog(id) {
+      timeTrackerState.logs = timeTrackerState.logs.filter(l => l.id !== id);
+      renderTimeLogsTable();
+      showToast('🗑️ Time entry removed.');
+    }
+
+    function openManualTimeLogModal() {
+      const task = prompt("Enter Task Description:", "UE5 Shader compilation R&D");
+      if (task) {
+        const hoursStr = prompt("Enter Logged Hours (e.g. 1.5):", "1.5");
+        const hours = parseFloat(hoursStr) || 1.0;
+        const sec = Math.round(hours * 3600);
+        timeTrackerState.logs.unshift({
+          id: Date.now(),
+          dev: '@danila',
+          task: task,
+          project: 'Unreal Engine 5 Core',
+          timeRange: 'Manual Entry',
+          duration: `${hours}h 00m`,
+          seconds: sec,
+          billable: true
+        });
+        timeTrackerState.todayLoggedSeconds += sec;
+        timeTrackerState.weekLoggedSeconds += sec;
+        updateTimeTrackerStats();
+        renderTimeLogsTable();
+        showToast(`✅ Manually logged ${hours}h for ${task}`);
+      }
+    }
+
+    function changeMattermostStatus() {
+      const newStatus = prompt("Enter Mattermost Active Sync Status:", timeTrackerState.mattermostStatus);
+      if (newStatus) {
+        timeTrackerState.mattermostStatus = newStatus;
+        const label = document.getElementById('mattermostStatusLabel');
+        if (label) label.innerText = newStatus;
+        showToast(`💬 Mattermost Status Updated: ${newStatus}`);
+      }
+    }
+
+    function exportTimeLogsCsv() {
+      let csvContent = "data:text/csv;charset=utf-8,Developer,Task,Project,TimeRange,Duration,Billable\n";
+      timeTrackerState.logs.forEach(l => {
+        csvContent += `"${l.dev}","${l.task}","${l.project}","${l.timeRange}","${l.duration}","${l.billable ? 'Yes' : 'No'}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "studio_time_tracker_report.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('📊 Exported CSV Time Tracker Report!');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initMovableModals();
       initMovableCanvasPan('inline');
       initMovableCanvasPan('modal');
       initSidebarResizer();
+      renderTimeLogsTable();
     });
 
     function showToast(msg) {
