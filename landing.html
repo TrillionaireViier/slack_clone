@@ -3530,11 +3530,13 @@
       toast.className = 'toast';
       toast.innerHTML = '<span>⚡</span> <span>' + msg + '</span>';
       container.appendChild(toast);
-      setTimeout(() => {
+      setTimeout(function() {
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => {
-          try { toast.remove(); } catch(e) {}
+        setTimeout(function() {
+          if (toast && toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
         }, 300);
       }, 3500);
     }
