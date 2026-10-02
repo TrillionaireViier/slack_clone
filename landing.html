@@ -247,6 +247,18 @@
       flex-direction: column;
       user-select: none;
     }
+    .sidebar-resizer {
+      width: 5px;
+      cursor: col-resize;
+      background: rgba(255, 255, 255, 0.04);
+      position: relative;
+      z-index: 10;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .sidebar-resizer:hover, .sidebar-resizer.resizing {
+      background: var(--accent2);
+      box-shadow: 0 0 10px rgba(0, 212, 170, 0.8);
+    }
     .sidebar-header {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
@@ -1202,6 +1214,9 @@
 
       </div>
     </div>
+
+    <!-- Draggable Sidebar Resizer Handle -->
+    <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize sidebar width"></div>
 
     <!-- Central Chat View -->
     <div class="chat-area" id="chatArea">
@@ -2407,7 +2422,7 @@
         ` : '';
 
         return `
-          <div class="msg-group" id="msg-${msg.id}">
+          <div class="msg-group" id="msg-${msg.id}" draggable="true" ondragstart="handleMessageDragStart(event, '${msg.id}')">
             <div class="msg-hover-tools">
               <button class="tool-btn" onclick="toggleReaction('${msg.id}', '👍')" title="Add Reaction">👍</button>
               <button class="tool-btn" onclick="toggleReaction('${msg.id}', '🚀')" title="Add Reaction">🚀</button>
@@ -2467,7 +2482,7 @@
         const isDeletable = id !== 'announcements';
 
         html += `
-          <div class="channel-item ${isActive ? 'active' : ''}" id="item-${id}" onclick="switchChannel('${id}', '${escapeHtml(ch.name)}', '${escapeHtml(ch.desc)}')">
+          <div class="channel-item ${isActive ? 'active' : ''}" id="item-${id}" draggable="true" ondragstart="handleChannelDragStart(event, '${id}')" ondragover="handleChannelDragOver(event)" ondrop="handleChannelDrop(event, '${id}')" onclick="switchChannel('${id}', '${escapeHtml(ch.name)}', '${escapeHtml(ch.desc)}')">
             <span>${icon}</span> <span>${cleanName}</span>
             ${isDeletable ? `<button class="btn-delete-channel" onclick="event.stopPropagation(); deleteChannel('${id}')" title="Delete #${cleanName}">✕</button>` : ''}
           </div>
@@ -2982,6 +2997,35 @@
       const targetList = e.currentTarget;
       if (!targetList) return;
       targetList.classList.remove('drag-over');
+
+      const dataStr = e.dataTransfer ? e.dataTransfer.getData('text/plain') : '';
+      let msgPayload = null;
+      try {
+        if (dataStr && dataStr.startsWith('{')) {
+          msgPayload = JSON.parse(dataStr);
+        }
+      } catch (err) {}
+
+      if (msgPayload && msgPayload.type === 'chat-message') {
+        const ticketNum = 'JIRA UE5-' + Math.floor(1000 + Math.random() * 9000);
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'kanban-card';
+        cardDiv.setAttribute('draggable', 'true');
+        cardDiv.setAttribute('onclick', `openEditJiraCardModal('${ticketNum}', '${escapeHtml(msgPayload.text)}', '@${escapeHtml(msgPayload.author)}', 'High 🟧', '${targetList.id}', this)`);
+        cardDiv.innerHTML = `
+          <div class="kanban-card-title">${escapeHtml(msgPayload.text.slice(0, 75))}${msgPayload.text.length > 75 ? '...' : ''}</div>
+          <div class="kanban-card-footer">
+            <span class="kanban-tag" style="background: rgba(76, 154, 255, 0.2); color: #4c9aff;">${ticketNum}</span>
+            <span class="kanban-assignee">@${escapeHtml(msgPayload.author)}</span>
+          </div>
+        `;
+        targetList.appendChild(cardDiv);
+        initKanbanDragAndDrop();
+        updateKanbanCounts();
+        if (targetList.id.startsWith('inline')) syncModalFromInline(); else syncInlineFromModal();
+        showToast(`📋 Converted chat message to Jira Ticket (${ticketNum})!`);
+        return;
+      }
 
       if (draggedKanbanCard) {
         targetList.appendChild(draggedKanbanCard);
@@ -4046,10 +4090,97 @@
       }, { passive: false });
     }
 
+    function handleMessageDragStart(e, msgId) {
+      const msgs = state.messages[state.currentChannelId] || [];
+      const msg = msgs.find(m => m.id === msgId);
+      if (!msg) return;
+      const payload = {
+        type: 'chat-message',
+        id: msg.id,
+        author: msg.author,
+        text: msg.text
+      };
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+      }
+    }
+
+    let draggedChannelId = null;
+    function handleChannelDragStart(e, id) {
+      draggedChannelId = id;
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleChannelDragOver(e) {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleChannelDrop(e, targetId) {
+      e.preventDefault();
+      if (!draggedChannelId || draggedChannelId === targetId) return;
+
+      const keys = Object.keys(state.channels).filter(id => !id.startsWith('dm-'));
+      const fromIdx = keys.indexOf(draggedChannelId);
+      const toIdx = keys.indexOf(targetId);
+
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const entries = Object.entries(state.channels);
+        const nonDms = entries.filter(([k]) => !k.startsWith('dm-'));
+        const dms = entries.filter(([k]) => k.startsWith('dm-'));
+
+        const item = nonDms.splice(fromIdx, 1)[0];
+        nonDms.splice(toIdx, 0, item);
+
+        const newChannels = {};
+        nonDms.concat(dms).forEach(([k, v]) => {
+          newChannels[k] = v;
+        });
+
+        state.channels = newChannels;
+        renderChannelsSidebar();
+        showToast('🔀 Re-ordered channels list!');
+      }
+      draggedChannelId = null;
+    }
+
+    function initSidebarResizer() {
+      const resizer = document.getElementById('sidebarResizer');
+      const sidebar = document.querySelector('.channels-sidebar');
+      if (!resizer || !sidebar) return;
+
+      let isResizing = false;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const railWidth = 72;
+        const newWidth = Math.max(160, Math.min(520, e.clientX - railWidth));
+        sidebar.style.width = newWidth + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          resizer.classList.remove('resizing');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initMovableModals();
       initMovableCanvasPan('inline');
       initMovableCanvasPan('modal');
+      initSidebarResizer();
     });
 
     function showToast(msg) {
