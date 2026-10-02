@@ -511,12 +511,57 @@
       margin-top: 2px;
     }
 
-    /* ── Trello & Jira Workstation Kanban Styling ── */
+    /* ── Movable Infinite Canvas Board Styling ── */
+    .kanban-canvas-viewport {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border-bright);
+      background-color: rgba(10, 8, 20, 0.9);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+      padding: 16px;
+      min-height: 480px;
+      cursor: grab;
+      user-select: none;
+    }
+    .kanban-canvas-viewport.panning {
+      cursor: grabbing !important;
+    }
+    .canvas-controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      background: rgba(20, 16, 38, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .canvas-mode-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .canvas-btn {
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
     .kanban-board-container {
       display: flex;
       gap: 12px;
       margin-top: 14px;
       overflow-x: auto;
+      transition: transform 0.05s ease-out;
     }
     .kanban-col {
       background: rgba(18, 16, 34, 0.8);
@@ -1211,8 +1256,17 @@
           </div>
         </div>
 
-        <!-- Inline Kanban Board Container -->
-        <div class="kanban-board-container" id="inlineKanbanBoardContainer">
+        <!-- Inline Movable Canvas Board Container -->
+        <div class="kanban-canvas-viewport" id="inlineKanbanViewport">
+          <div class="canvas-controls-bar">
+            <span class="canvas-mode-badge">🎨 Movable Canvas Board</span>
+            <button class="btn btn-sm canvas-btn" onclick="zoomKanbanCanvas('inline', 0.1)" title="Zoom In">+</button>
+            <button class="btn btn-sm canvas-btn" onclick="zoomKanbanCanvas('inline', -0.1)" title="Zoom Out">-</button>
+            <button class="btn btn-sm canvas-btn" onclick="resetKanbanCanvas('inline')" title="Reset Canvas View">🎯 Reset View</button>
+            <span style="font-size: 0.72rem; color: var(--text-dim); margin-left: 6px;">🖐️ Hold & drag background to pan canvas</span>
+          </div>
+
+          <div class="kanban-board-container" id="inlineKanbanBoardContainer">
           <!-- Col 1: Backlog / To Do -->
           <div class="kanban-col">
             <div class="kanban-col-header">
@@ -1282,6 +1336,7 @@
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -1511,7 +1566,17 @@
       </div>
       <div class="modal-subtitle">Live studio sprint synchronization for Unreal Engine 5 task management.</div>
 
-      <div class="kanban-board-container" id="kanbanBoardContainer">
+        <!-- Modal Movable Canvas Board Container -->
+        <div class="kanban-canvas-viewport" id="modalKanbanViewport">
+          <div class="canvas-controls-bar">
+            <span class="canvas-mode-badge">🎨 Movable Canvas Board</span>
+            <button class="btn btn-sm canvas-btn" onclick="zoomKanbanCanvas('modal', 0.1)" title="Zoom In">+</button>
+            <button class="btn btn-sm canvas-btn" onclick="zoomKanbanCanvas('modal', -0.1)" title="Zoom Out">-</button>
+            <button class="btn btn-sm canvas-btn" onclick="resetKanbanCanvas('modal')" title="Reset Canvas View">🎯 Reset View</button>
+            <span style="font-size: 0.72rem; color: var(--text-dim); margin-left: 6px;">🖐️ Hold & drag background to pan canvas</span>
+          </div>
+
+          <div class="kanban-board-container" id="kanbanBoardContainer">
         <!-- Col 1: Backlog / To Do -->
         <div class="kanban-col">
           <div class="kanban-col-header">
@@ -1581,7 +1646,7 @@
             </div>
           </div>
         </div>
-      </div>
+        </div>
 
       <button class="btn btn-sm" style="margin-top: 18px; width: 100%;" onclick="closeWorkstationModal()">Close Workstation Board</button>
     </div>
@@ -3888,8 +3953,103 @@
       });
     }
 
+    // Movable Kanban Canvas System (Pan & Zoom Board)
+    const canvasState = {
+      inline: { panX: 0, panY: 0, zoom: 1 },
+      modal: { panX: 0, panY: 0, zoom: 1 }
+    };
+
+    function applyCanvasTransform(type) {
+      const stateObj = canvasState[type];
+      const boardEl = type === 'inline' ? document.getElementById('inlineKanbanBoardContainer') : document.getElementById('kanbanBoardContainer');
+      if (boardEl) {
+        boardEl.style.transformOrigin = '0 0';
+        boardEl.style.transform = `translate(${stateObj.panX}px, ${stateObj.panY}px) scale(${stateObj.zoom})`;
+      }
+    }
+
+    function zoomKanbanCanvas(type, delta) {
+      const stateObj = canvasState[type];
+      stateObj.zoom = Math.max(0.6, Math.min(1.6, stateObj.zoom + delta));
+      applyCanvasTransform(type);
+      showToast(`🔍 Canvas Zoom: ${Math.round(stateObj.zoom * 100)}%`);
+    }
+
+    function resetKanbanCanvas(type) {
+      canvasState[type] = { panX: 0, panY: 0, zoom: 1 };
+      applyCanvasTransform(type);
+      showToast('🎯 Canvas View Reset (100%)');
+    }
+
+    function initMovableCanvasPan(type) {
+      const viewport = type === 'inline' ? document.getElementById('inlineKanbanViewport') : document.getElementById('modalKanbanViewport');
+      const board = type === 'inline' ? document.getElementById('inlineKanbanBoardContainer') : document.getElementById('kanbanBoardContainer');
+      if (!viewport || !board) return;
+
+      let isPanning = false;
+      let startX = 0, startY = 0;
+
+      viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.kanban-card') || e.target.closest('.kanban-col-header') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.canvas-controls-bar')) {
+          return;
+        }
+        isPanning = true;
+        startX = e.clientX - canvasState[type].panX;
+        startY = e.clientY - canvasState[type].panY;
+        viewport.classList.add('panning');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        canvasState[type].panX = e.clientX - startX;
+        canvasState[type].panY = e.clientY - startY;
+        applyCanvasTransform(type);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isPanning) {
+          isPanning = false;
+          viewport.classList.remove('panning');
+        }
+      });
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.kanban-card') || e.target.closest('.kanban-col-header') || e.target.closest('button') || e.target.closest('.canvas-controls-bar')) return;
+        const touch = e.touches[0];
+        isPanning = true;
+        startX = touch.clientX - canvasState[type].panX;
+        startY = touch.clientY - canvasState[type].panY;
+        viewport.classList.add('panning');
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isPanning) return;
+        const touch = e.touches[0];
+        canvasState[type].panX = touch.clientX - startX;
+        canvasState[type].panY = touch.clientY - startY;
+        applyCanvasTransform(type);
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        if (isPanning) {
+          isPanning = false;
+          viewport.classList.remove('panning');
+        }
+      });
+
+      viewport.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.08 : -0.08;
+          zoomKanbanCanvas(type, delta);
+        }
+      }, { passive: false });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initMovableModals();
+      initMovableCanvasPan('inline');
+      initMovableCanvasPan('modal');
     });
 
     function showToast(msg) {
